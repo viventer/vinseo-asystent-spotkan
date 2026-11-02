@@ -39,6 +39,7 @@ Consult these files for the relevant context and requirements:
 - `docs/offer.md` — job offer and employer expectations.
 - `docs/cv.md` — candidate's experience and skills.
 - `docs/zadanie.md` — assignment requirements and acceptance criteria.
+- `docs/tech-stack.md` — approved technology stack. The first section is the first version. The second section is for later versions.
 - `docs/` — project notes and decision records created during the work.
 
 Do not duplicate or infer detailed assignment requirements in this file; `docs/zadanie.md` is the authoritative source.
@@ -74,6 +75,8 @@ When requirements are ambiguous, incomplete, or conflict with an approved decisi
 Every implementation plan must state its goal, scope, non-goals, assumptions, alternatives, risks, verification steps, and open questions.
 
 Do not introduce unapproved features, dependencies, refactors, or scope expansion. Present them as optional proposals and wait for user confirmation.
+
+`docs/tech-stack.md` is the only approved technology stack. Do not add, replace, or use a technology outside that list on your own initiative. Do that only when the user asks for it or explicitly allows it. First-version work stays inside the first-version list. Technologies from the later-versions list stay unused until the user asks for them.
 
 ## Verification and Data Handling
 
