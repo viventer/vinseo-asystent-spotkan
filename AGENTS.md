@@ -40,6 +40,8 @@ Consult these files for the relevant context and requirements:
 - `docs/cv.md` — candidate's experience and skills.
 - `docs/zadanie.md` — assignment requirements and acceptance criteria.
 - `docs/tech-stack.md` — approved technology stack. The first section is the first version. The second section is for later versions.
+- `docs/authorization.md` — first-version authorization rules for meeting data,
+  search, and the assistant.
 - `docs/` — project notes and decision records created during the work.
 
 Do not duplicate or infer detailed assignment requirements in this file; `docs/zadanie.md` is the authoritative source.
@@ -71,6 +73,11 @@ Keep each plan and its implementation small enough to review comfortably. Split 
 `docs/zadanie.md` defines the assignment requirements. Approved decisions in `docs/` define the current application specification. `docs/offer.md` and `docs/cv.md` provide context, not requirements.
 
 When requirements are ambiguous, incomplete, or conflict with an approved decision, ask a focused question before implementing. Do not silently make material assumptions.
+
+For access-control work, treat `docs/authorization.md` as the source of truth:
+only meeting participants may access meeting data in version one. The organiser
+does not gain access unless they also participated. Search and assistant
+retrieval must apply authorization before reading or sending content to a model.
 
 Every implementation plan must state its goal, scope, non-goals, assumptions, alternatives, risks, verification steps, and open questions.
 
