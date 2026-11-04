@@ -13,7 +13,7 @@ function createService(add: Queue<JobPayload, void, ProcessingStep>['add']) {
 
 describe('EnqueueService', () => {
   it('enqueues the validated payload under its step name', async () => {
-    const add = vi.fn(async () => undefined);
+    const add = vi.fn<Queue<JobPayload, void, ProcessingStep>['add']>();
     const service = createService(add);
 
     await service.enqueue({ meetingId, step: 'recording-ready' });
@@ -25,7 +25,7 @@ describe('EnqueueService', () => {
   });
 
   it('does not enqueue a payload that fails validation', async () => {
-    const add = vi.fn(async () => undefined);
+    const add = vi.fn<Queue<JobPayload, void, ProcessingStep>['add']>();
     const service = createService(add);
 
     await expect(
