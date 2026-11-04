@@ -101,7 +101,7 @@ Returns the stored transcript for a participant.
 
 ### `GET /meetings/{meetingId}/summary`
 
-Returns the published summary and its decisions for a participant.
+Returns the published summary and the meeting decisions for a participant.
 
 **Input.**
 
@@ -115,7 +115,7 @@ Returns the published summary and its decisions for a participant.
 
 404 covers a missing meeting, a non-participant, and a participant whose meeting has no published summary. An invalid summary result is not stored, so this read stays 404 after a failed validation. The transcript from the earlier step remains readable.
 
-**Service logic.** The service checks participation, then loads the single `summaries` row and its `decisions` in `position` order. `summary` is the summary text. Each decision's `speaker_ids` become `Speaker` values with `displayName: null`. A decision may have no speakers.
+**Service logic.** The service checks participation, then loads the single `summaries` row and the meeting's `decisions` in `position` order. `summary` is the summary text. Each decision's `speaker_ids` become `Speaker` values with `displayName: null`. A decision may have no speakers and may have no summary.
 
 ### `GET /meetings/{meetingId}/tasks`
 
@@ -128,9 +128,9 @@ Returns the published tasks for a participant.
 
 **Output.**
 
-- 200: `TasksResponse`. `tasks` may be empty when a summary exists and has no tasks.
+- 200: `TasksResponse`. `tasks` may be empty.
 - 400, 401, 404, 500: `MeetingReadError`, as in Conventions.
 
-404 covers a missing meeting, a non-participant, and a participant whose meeting has no published summary. Tasks are not readable when the summary was not published.
+404 covers a missing meeting and a non-participant. A meeting with no task rows returns an empty list.
 
-**Service logic.** The service checks participation, then loads `tasks` for the meeting's summary in `position` order. Each row becomes a `Task`: the local `speakerId` with `displayName: null`, the action, and the deadline as `YYYY-MM-DD`.
+**Service logic.** The service checks participation, then loads `tasks` for the meeting in `position` order. Each row becomes a `Task`: the local `speakerId` with `displayName: null`, the action, and the deadline as `YYYY-MM-DD`. A task may have no summary.

@@ -47,7 +47,7 @@
 
 | Field | Type | Required | Constraints |
 | --- | --- | --- | --- |
-| id | uuid | yes | PK |
+| id | uuid | yes | PK. Unique together with meeting_id |
 | meeting_id | uuid | yes | FK meetings.id, unique, ON DELETE RESTRICT |
 | text | text | yes | non-empty |
 
@@ -56,8 +56,9 @@
 | Field | Type | Required | Constraints |
 | --- | --- | --- | --- |
 | id | uuid | yes | PK |
-| summary_id | uuid | yes | FK summaries.id, ON DELETE RESTRICT |
-| position | integer | yes | unique (summary_id, position), >= 0 |
+| meeting_id | uuid | yes | FK meetings.id, ON DELETE RESTRICT |
+| summary_id | uuid | no | When set, (summary_id, meeting_id) references summaries (id, meeting_id), ON DELETE RESTRICT. Null when the decision did not come from a summary |
+| position | integer | yes | unique (meeting_id, position), >= 0 |
 | text | text | yes | non-empty |
 | speaker_ids | text[] | yes | may be empty; each element non-empty |
 
@@ -66,8 +67,9 @@
 | Field | Type | Required | Constraints |
 | --- | --- | --- | --- |
 | id | uuid | yes | PK |
-| summary_id | uuid | yes | FK summaries.id, ON DELETE RESTRICT |
-| position | integer | yes | unique (summary_id, position), >= 0 |
+| meeting_id | uuid | yes | FK meetings.id, ON DELETE RESTRICT |
+| summary_id | uuid | no | When set, (summary_id, meeting_id) references summaries (id, meeting_id), ON DELETE RESTRICT. Null when the task did not come from a summary |
+| position | integer | yes | unique (meeting_id, position), >= 0 |
 | speaker_id | text | yes | non-empty |
 | action | text | yes | non-empty |
 | deadline | date | yes | |
