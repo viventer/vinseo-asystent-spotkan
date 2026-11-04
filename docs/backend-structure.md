@@ -22,7 +22,7 @@ backend/
     ├── database/            # Drizzle client, transaction helper, seed
     ├── queue/               # BullMQ connection, queue names, job payload schemas
     ├── shared/
-    │   ├── decorators/
+    │   ├── decorators/        # @CallerUserId(), the version-zero X-User-Id stand-in
     │   ├── filters/         # map errors to stable error codes
     │   ├── guards/
     │   ├── interceptors/
@@ -79,7 +79,7 @@ transcripts/
 - `transcripts` — `transcript_segments`, the transcription port, and `GET /meetings/:meetingId/transcript`.
 - `summaries` — `summaries`, `decisions`, and `tasks`; the outbound payload filter; the summary port; Zod validation of the model result; `GET .../summary` and `GET .../tasks`.
 - `processing` — `POST /meetings/:meetingId/processing`, the worker processor, and the service that runs steps by calling the other features' services. It has no tables. A finished step is the stored result in PostgreSQL, not a status written to Redis. The job schema lives in `queue/`.
-- `config`, `database`, `queue`, and `shared` hold infrastructure and no meeting rules.
+- `config`, `database`, `queue`, and `shared` hold infrastructure and no meeting rules. The version-zero caller identity is `@CallerUserId()` in `shared/decorators`. It reads `X-User-Id` and a pipe rejects a missing or non-uuid value as `unauthenticated`. On a meeting read, `@Param(..., ParseUuidPipe)` is the rightmost parameter. Nest records parameter metadata from right to left and reports the first of those failures, so a malformed path id stays `invalid_request` even when the header is missing.
 
 `app.module.ts` imports the HTTP features. `worker.module.ts` imports `processing` and the features the pipeline calls. Neither process starts the other.
 
@@ -135,5 +135,5 @@ Use `kebab-case` file names with the role as the suffix: `meetings.service.ts`, 
 
 - A new recording source or model is a new adapter file. The service stays the same.
 - A new pipeline step is a step name in `queue/` plus a method on the owning feature's service, called from `processing`.
-- Search, the assistant, and speaker mapping are new or extended feature directories. Speaker mapping extends `meetings`. Google login replaces the `X-User-Id` stand-in in `shared/guards` and leaves `MeetingAccessService` in place.
+- Search, the assistant, and speaker mapping are new or extended feature directories. Speaker mapping extends `meetings`. Google login replaces the `@CallerUserId()` parameter decorator in `shared/decorators` and leaves `MeetingAccessService` in place.
 - The two entrypoints keep the API and the worker deployable on their own.
