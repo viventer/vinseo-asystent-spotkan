@@ -26,6 +26,100 @@ If you use useMemo, useCallback, or React.memo, briefly justify the decision in 
 - don't use margin-top if it isn't necessary
 - each file can contain only one component
 
+# Coding conventions (backend)
+
+## General TypeScript
+
+- Use strict TypeScript settings.
+- Do not use `any`; use `unknown` and narrow it explicitly.
+- Keep domain logic independent from NestJS decorators and transport details.
+- Prefer small, explicit functions over implicit framework behaviour.
+- Validate all external input at the boundary before it reaches application logic.
+- Do not silently swallow errors; classify them and handle them explicitly.
+- Keep secrets, tokens, recordings, transcripts, emails, and personal data out of logs.
+
+## NestJS
+
+- Organize code by business module, not by technical type alone.
+- Keep controllers thin: parse input, invoke an application service, and map the result to HTTP.
+- Keep business rules in services or use-case classes, not in controllers, queues, or DTOs.
+- Use dependency injection for repositories, external adapters, and infrastructure services.
+- Do not access the database directly from controllers.
+- Keep queue processors thin and delegate work to application services.
+- Use guards and server-side authorization checks for every meeting-data operation.
+- Deny access by default; never treat a meeting ID as authorization.
+- Prefer explicit error responses with stable error codes.
+
+## Zod
+
+- Use Zod schemas for request input, environment variables, external provider responses, and persisted model outputs.
+- Derive TypeScript types from Zod schemas where practical.
+- Validate provider responses before storing or exposing them.
+- Do not duplicate the same validation rules in unrelated DTOs and services.
+- Never pass unvalidated external data into domain logic.
+
+## PostgreSQL and Drizzle
+
+- Treat PostgreSQL as the source of truth for business state and pipeline progress.
+- Define database schema in Drizzle and manage changes through committed Drizzle Kit migrations.
+- Never modify the database schema manually or rely on automatic synchronization.
+- Use transactions when a result and its completion marker must be stored atomically.
+- Make pipeline steps idempotent; repeated job delivery must not create duplicate results.
+- Keep database queries close to repositories or data-access services.
+- Select only the columns needed by the operation.
+- Use parameterized Drizzle queries; never build SQL by concatenating user input.
+- Add indexes only for demonstrated access patterns and document non-obvious indexes.
+
+## BullMQ and Redis
+
+- Queue payloads must contain identifiers and step names only; never put transcripts, recordings, secrets, or personal data in jobs.
+- Treat BullMQ as delivery and scheduling infrastructure, not as the source of truth.
+- Make every processor safe for retries and duplicate delivery.
+- Store completion state and business results in PostgreSQL in the same transaction.
+- Configure explicit retry, backoff, timeout, and failure handling for each job type.
+- Keep HTTP API processes and long-running workers separately deployable.
+- Do not use Redis as a replacement for durable business data.
+
+## Docker Compose
+
+- Keep local development reproducible with Docker Compose.
+- Pin service images to explicit major versions or compatible version ranges.
+- Provide health checks for PostgreSQL and Redis.
+- Do not commit secrets or production credentials.
+- Keep service configuration in environment variables and validate required variables at startup.
+- Ensure the API, worker, PostgreSQL, and Redis can be started and tested with one documented command.
+
+## Vitest
+
+- Test observable behaviour and business invariants rather than implementation details.
+- Every authorization rule must have an allow and deny test.
+- Test idempotency, transactions, repeated job delivery, invalid external data, and retry-safe processing.
+- Use deterministic fixtures containing no real personal or customer data.
+- Keep unit tests fast and isolated; use integration tests for database and queue boundaries.
+- Do not make tests depend on execution order, wall-clock timing, or external services unless explicitly marked as contract tests.
+
+## Swagger / OpenAPI
+
+- Document every public endpoint, input, output, authorization requirement, and relevant error response.
+- Keep OpenAPI descriptions consistent with runtime validation.
+- Do not expose internal database models, secrets, provider payloads, or unauthorized meeting metadata.
+- Regenerate or verify the OpenAPI document when an endpoint contract changes.
+
+## External integrations
+
+- Hide Google, transcription, model, and storage providers behind application-owned adapters.
+- Keep provider-specific types and SDK calls inside infrastructure modules.
+- Apply timeouts, bounded retries, and explicit error mapping to external calls.
+- Filter and authorize meeting data before sending it to any external provider.
+- Provide deterministic fake adapters for local development and automated tests.
+
+## Technology boundaries
+
+- Use only technologies listed as approved for the current version in `docs/tech-stack.md`.
+- Do not introduce technologies listed under later versions without explicit approval.
+- Before using a framework API, database driver, or library pattern, consult the version installed in the repository and its local documentation.
+- Do not add dependencies when the approved stack already provides the required capability.
+
 # Project Context and Collaboration
 
 ## Purpose
