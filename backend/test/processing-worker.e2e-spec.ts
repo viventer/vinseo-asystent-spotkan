@@ -17,24 +17,31 @@ import { MEETING_PROCESSING_QUEUE_NAME } from '../src/queue/queue-names.js';
 import { recordings } from '../src/recordings/entities/recording.table.js';
 import { RecordingsService } from '../src/recordings/recordings.service.js';
 import { FakeSummaryAdapter } from '../src/summaries/adapters/fake-summary.adapter.js';
+import { readExampleMeetingFixture } from '../src/shared/fixtures/example-meeting-fixture.js';
 import {
   SUMMARY_ADAPTER,
+  summaryResultSchema,
   type SummaryAdapter,
 } from '../src/summaries/adapters/summary.adapter.js';
+import { transcriptionResultSchema } from '../src/transcripts/adapters/transcription.adapter.js';
 import { decisions } from '../src/summaries/entities/decision.table.js';
 import { summaries } from '../src/summaries/entities/summary.table.js';
 import { tasks } from '../src/summaries/entities/task.table.js';
 import { transcriptSegments } from '../src/transcripts/entities/transcript-segment.table.js';
 import { WorkerModule } from '../src/worker.module.js';
 
-const workerMeetingId = '66666666-6666-4666-8666-666666666666';
+const workerMeetingId = '86868686-8686-4686-8686-868686868686';
+
+const fixture = readExampleMeetingFixture();
+const fixtureTranscript = transcriptionResultSchema.parse(fixture.transcript);
+const fixtureSummary = summaryResultSchema.parse(fixture.summary);
 
 const publishedCounts = {
   recordings: 1,
-  segments: 10,
+  segments: fixtureTranscript.segments.length,
   summaries: 1,
-  decisions: 1,
-  tasks: 2,
+  decisions: fixtureSummary.decisions.length,
+  tasks: fixtureSummary.tasks.length,
 };
 
 interface WorkerContext {
@@ -346,9 +353,7 @@ async function seedWorkerMeeting(database: DatabaseService): Promise<void> {
 }
 
 async function clearWorkerMeeting(database: DatabaseService): Promise<void> {
-  await database.db
-    .delete(tasks)
-    .where(eq(tasks.meetingId, workerMeetingId));
+  await database.db.delete(tasks).where(eq(tasks.meetingId, workerMeetingId));
   await database.db
     .delete(decisions)
     .where(eq(decisions.meetingId, workerMeetingId));

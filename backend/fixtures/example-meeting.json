@@ -1,0 +1,1237 @@
+{
+  "transcript": {
+    "segments": [
+      {
+        "speakerId": "speaker_1",
+        "startMs": 0,
+        "endMs": 5700,
+        "text": "Dzień dobry, dziękuję, że się udało zgrać kalendarze. Zaczynamy spotkanie dotyczące kampanii zimowej dla Ziarnistego."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 6150,
+        "endMs": 13350,
+        "text": "Dzień dobry. Tak, mamy dla was dziś godzinę, ale chciałabym zmieścić się w trzech kwadransach, bo potem mam zarząd."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 13800,
+        "endMs": 18700,
+        "text": "Dzień dobry wszystkim. Przygotowałem krótką prezentację z wynikami października i propozycją podziału budżetu."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 19150,
+        "endMs": 26750,
+        "text": "Plan jest taki: najpierw wyniki października, potem koncept kampanii zimowej i budżet, na końcu harmonogram i kto za co odpowiada."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 27200,
+        "endMs": 32500,
+        "text": "Brzmi dobrze. Dodajmy jeszcze punkt o newsletterze, bo dział sprzedaży pytał o kody rabatowe."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 32950,
+        "endMs": 38650,
+        "text": "Jasne, wpisuję newsletter i kody rabatowe po budżecie. Czy ktoś ma jeszcze coś do agendy?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 39100,
+        "endMs": 44000,
+        "text": "Ja bym dorzucił krótko kwestię raportowania, żebyśmy od razu ustalili rytm i wskaźniki."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 44450,
+        "endMs": 49750,
+        "text": "Zgoda, to też jest dla mnie ważne, bo zarząd pyta o liczby co tydzień."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 50200,
+        "endMs": 56700,
+        "text": "Zacznę od social mediów. Zasięg organiczny na Instagramie w październiku wzrósł o dwadzieścia dwa procent względem września."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 57150,
+        "endMs": 61750,
+        "text": "To całkiem dużo. Z czego to wynika, z rolek czy z karuzel?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 62200,
+        "endMs": 70200,
+        "text": "Głównie z rolek. Trzy z pięciu najlepszych postów to były krótkie filmy z baristami przy pracy, każdy powyżej trzydziestu tysięcy wyświetleń."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 70650,
+        "endMs": 76350,
+        "text": "Wiedziałam, że ludzie lubią zaplecze. Zespół w kawiarniach się ucieszy, bo sami to nagrywali telefonem."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 76800,
+        "endMs": 82900,
+        "text": "I to jest ważna informacja do kampanii. Autentyczne materiały z kawiarni działają lepiej niż produkcja studyjna."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 83350,
+        "endMs": 90950,
+        "text": "Przejdę do płatnych reklam. W Meta Ads wydaliśmy w październiku dwanaście tysięcy złotych, a ROAS wyszedł trzy i dwie dziesiąte."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 91400,
+        "endMs": 95200,
+        "text": "Czyli poniżej celu, który ustaliliśmy na trzy i pół, prawda?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 95650,
+        "endMs": 104050,
+        "text": "Tak, lekko poniżej. Największy problem to zbyt szeroka grupa odbiorców w pierwszych dwóch tygodniach, później zawęziliśmy ją i ROAS skoczył do czterech."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 104500,
+        "endMs": 109100,
+        "text": "To znaczy, że dobrze, że to wyłapaliście. Jak to przełożymy na grudzień?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 109550,
+        "endMs": 117550,
+        "text": "Od początku zawężamy do osób w promieniu dwudziestu kilometrów od kawiarni i do list podobnych do obecnych klientów z programu lojalnościowego."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 118000,
+        "endMs": 126000,
+        "text": "Lista klientów z programu jest zgodna z RODO, mamy zgody marketingowe. Ale zapytam jeszcze prawnika, czy możemy ją wgrać w całości."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 126450,
+        "endMs": 133250,
+        "text": "Dobrze, to wpiszmy jako ustalenie, że decyzja o wgraniu listy zależy od odpowiedzi działu prawnego po waszej stronie."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 133700,
+        "endMs": 141300,
+        "text": "W Google Ads kampania na frazy markowe i lokalne wydała cztery tysiące, współczynnik konwersji to sześć procent. Tu jest stabilnie."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 141750,
+        "endMs": 144750,
+        "text": "A frazy ogólne, na przykład kawa ziarnista online?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 145200,
+        "endMs": 153200,
+        "text": "Tam koszt kliknięcia jest zbyt wysoki, prawie dwa złote pięćdziesiąt. Proponuję ograniczyć je do minimum i skupić się na frazach lokalnych."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 153650,
+        "endMs": 158550,
+        "text": "Zgadzam się, nie ma sensu przepalać budżetu na konkurowanie z dużymi sklepami internetowymi."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 159000,
+        "endMs": 164300,
+        "text": "Newsletter. Mamy obecnie osiem tysięcy dwustu subskrybentów, otwieralność trzydzieści jeden procent, klikalność cztery procent."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 164750,
+        "endMs": 170450,
+        "text": "To dobre wyniki jak na naszą branżę. Ale baza rośnie wolno, dopiero sto osób miesięcznie."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 170900,
+        "endMs": 177400,
+        "text": "Dlatego chcemy w kampanii zimowej mocno pracować nad pozyskaniem zapisów. Wrócę do tego w dalszej części spotkania."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 177850,
+        "endMs": 182450,
+        "text": "Dobrze. Jedno pytanie do wyników: ile sprzedaży w sklepie internetowym przypisujecie kampaniom?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 182900,
+        "endMs": 189000,
+        "text": "Według modelu ostatniego kliknięcia około osiemnastu procent październikowej sprzedaży online. Z uwzględnieniem asyst to blisko trzydzieści."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 189450,
+        "endMs": 194050,
+        "text": "Czyli kampanie realnie pracują, ale pewnie część osób kupuje po wejściu bezpośrednio."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 194500,
+        "endMs": 200200,
+        "text": "Tak, dlatego chcę poprawić śledzenie konwersji, bo dzisiaj piksel nie łapie części zakupów na telefonach."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 200650,
+        "endMs": 205950,
+        "text": "To na pewno jest do naprawienia przed startem, wpisujemy to jako zadanie dla Ciebie."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 206400,
+        "endMs": 212500,
+        "text": "Jasne, zajmę się konfiguracją GA4 i piksela, potrzebuję tylko dostępów do konta reklamowego i Search Console."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 212950,
+        "endMs": 218250,
+        "text": "Dostępy przekażę jeszcze dziś albo jutro rano, muszę poprosić dział IT o nadanie uprawnień."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 218700,
+        "endMs": 226300,
+        "text": "To przejdźmy do koncepcji. Nazwaliśmy ją roboczo Ciepły Początek i chodzi o poranny rytuał z kawą w chłodne zimowe dni."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 226750,
+        "endMs": 232450,
+        "text": "Podoba mi się nazwa, jest prosta. Czy ma być jedna wspólna historia, czy kilka wątków?"
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 232900,
+        "endMs": 240900,
+        "text": "Jeden główny wątek i trzy odsłony: początek listopada to zapowiedź, od dwudziestego listopada pełna kampania, a od Black Friday oferta świąteczna."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 241350,
+        "endMs": 246650,
+        "text": "Black Friday wypada dwudziestego siódmego, tak? Czy robimy w ogóle promocję w ten dzień?"
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 247100,
+        "endMs": 254700,
+        "text": "Proponujemy nie robić klasycznej obniżki. Zamiast tego bonus do zakupu, na przykład darmowy kubek przy zamówieniu powyżej stu pięćdziesięciu złotych."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 255150,
+        "endMs": 262350,
+        "text": "To mi się podoba, bo nie psujemy marży, a kubek mamy w magazynie. Obawiam się tylko, czy zapas wystarczy."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 262800,
+        "endMs": 269600,
+        "text": "Mamy około dwóch tysięcy kubków. Muszę sprawdzić z logistyką, czy da się dokupić, gdyby kampania poszła bardzo dobrze."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 270050,
+        "endMs": 274950,
+        "text": "Dobrze, to proszę o potwierdzenie liczby kubków, żebyśmy mogli ustawić limit w komunikacji."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 275400,
+        "endMs": 282200,
+        "text": "Od strony reklam możemy ustawić licznik pozostałych kubków na stronie, to zwykle zwiększa konwersję, ale wymaga ręcznego pilnowania."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 282650,
+        "endMs": 288350,
+        "text": "Wolałabym unikać licznika, jeśli stan jest niepewny. Lepiej napisać, że oferta trwa do wyczerpania zapasów."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 288800,
+        "endMs": 293400,
+        "text": "Zgoda, komunikat o wyczerpaniu zapasów jest bezpieczniejszy i nie wymaga ręcznej aktualizacji."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 293850,
+        "endMs": 302250,
+        "text": "Co z hasłem kampanii? Mam wrażenie, że Ciepły Początek jest dobry na social media, ale na plakat w kawiarni potrzebujemy czegoś krótszego."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 302700,
+        "endMs": 310300,
+        "text": "Zaproponujemy hasło drugiego poziomu. Pierwsza kawa zimy, to cztery słowa i da się to umieścić na kubku i na witrynie."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 310750,
+        "endMs": 316450,
+        "text": "Pierwsza kawa zimy, tak, to działa. Zapiszcie to jako hasło na materiały w punktach sprzedaży."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 316900,
+        "endMs": 323700,
+        "text": "Z mojej strony dopowiem, że to hasło dobrze pasuje do reklam, bo pozwala na dynamiczne wstawianie nazwy miasta."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 324150,
+        "endMs": 328750,
+        "text": "To znaczy, że zobaczę Pierwsza kawa zimy w Poznaniu albo we Wrocławiu?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 329200,
+        "endMs": 335700,
+        "text": "Dokładnie. Mamy kawiarnie w sześciu miastach i dla każdego przygotujemy osobną wersję reklamy z adresem najbliższego lokalu."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 336150,
+        "endMs": 342650,
+        "text": "Świetnie. To bardzo ułatwi mi rozmowę z kierownikami lokali, bo będą widzieć, że kampania dotyczy ich miasta."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 343100,
+        "endMs": 349600,
+        "text": "Jeśli chodzi o ton komunikacji, proponujemy ciepły, trochę żartobliwy, bez nadmiaru ofert. Nie chcemy zasypywać ludzi rabatami."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 350050,
+        "endMs": 354950,
+        "text": "Tak, proszę. W zeszłym roku mieliśmy skargi na zbyt dużo wiadomości w grudniu."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 355400,
+        "endMs": 361100,
+        "text": "Dlatego w newsletterze ograniczymy częstotliwość do jednej wiadomości tygodniowo, a w okresie świątecznym do dwóch."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 361550,
+        "endMs": 367250,
+        "text": "To rozsądne. Zapiszcie, że maksymalnie dwa maile tygodniowo i żadnych dodatkowych wysyłek bez mojej zgody."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 367700,
+        "endMs": 371100,
+        "text": "Zapisane. To już jest twarda reguła dla całej kampanii."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 371550,
+        "endMs": 378050,
+        "text": "Przejdźmy do budżetu. Łączna kwota na trzy miesiące, od listopada do stycznia, to sześćdziesiąt tysięcy złotych netto."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 378500,
+        "endMs": 384200,
+        "text": "Tak, to jest kwota zatwierdzona przez zarząd, ale proszę, żebyście jej nie przekraczali bez konsultacji."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 384650,
+        "endMs": 393050,
+        "text": "Oczywiście. Proponuję podział: czterdzieści pięć procent na Meta Ads, dwadzieścia pięć na Google Ads, piętnaście na influencerów i piętnaście na produkcję materiałów."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 393500,
+        "endMs": 399200,
+        "text": "Czyli Meta to dwadzieścia siedem tysięcy, Google piętnaście, influencerzy dziewięć i produkcja dziewięć, dobrze liczę?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 399650,
+        "endMs": 405350,
+        "text": "Dobrze liczysz. Dodatkowo zostawiamy bufor na testy, ale w ramach tych kwot, nie ponad nie."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 405800,
+        "endMs": 410000,
+        "text": "A TikTok? Dużo osób z zespołu mówi, że powinniśmy tam być."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 410450,
+        "endMs": 420350,
+        "text": "Rozważałem TikTok Ads, ale przy tym budżecie rozproszyłby środki. Proponuję w tej kampanii nie uruchamiać reklam na TikToku, tylko przetestować go w styczniu na małej próbie."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 420800,
+        "endMs": 428400,
+        "text": "Zgadzam się, wolę skupić środki na tym, co już działa. Ale chcę zobaczyć plan testów, zanim zapadnie decyzja na styczeń."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 428850,
+        "endMs": 434550,
+        "text": "Przygotuję plan testów TikToka z proponowanym budżetem i miarami sukcesu, wyślę go w połowie grudnia."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 435000,
+        "endMs": 442200,
+        "text": "Wpisuję to jako zadanie. Dodam, że produkcja materiałów obejmuje sesję zdjęciową i montaż rolek, a nie dużą produkcję wideo."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 442650,
+        "endMs": 448750,
+        "text": "Ile dni zdjęciowych to oznacza? Bo kawiarnie nie mogą być zamknięte dla klientów przez cały dzień."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 449200,
+        "endMs": 456000,
+        "text": "Planujemy dwa krótkie dni zdjęciowe, w godzinach niskiego ruchu, od ósmej do jedenastej, w dwóch kawiarniach w Poznaniu."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 456450,
+        "endMs": 461750,
+        "text": "Dobrze, wybierzcie lokale przy placu i przy uniwersytecie, tam wystrój jest najlepszy. Uprzedzę kierowników."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 462200,
+        "endMs": 467500,
+        "text": "Super. Prześlemy wycenę produkcji i harmonogram dni zdjęciowych do piątku, żebyście mogli to zatwierdzić."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 467950,
+        "endMs": 475150,
+        "text": "Potrzebuję tego na piśmie, bo muszę wystawić zamówienie w systemie zakupowym. Bez numeru zamówienia nie mogę wam zapłacić faktury."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 475600,
+        "endMs": 479800,
+        "text": "Rozumiemy, wycenę wyślemy szóstego listopada, a Wy po zatwierdzeniu wystawiacie zamówienie."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 480250,
+        "endMs": 485550,
+        "text": "Zamówienie wystawię do dziesiątego listopada, jeśli wycena będzie zgodna z tym, co dziś omówiliśmy."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 486000,
+        "endMs": 492100,
+        "text": "Pamiętajmy, że kampania zaczyna się dwudziestego, a materiały muszą być gotowe tydzień wcześniej. Czasu jest niewiele."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 492550,
+        "endMs": 497450,
+        "text": "Wiem. Dlatego decyzję o budżecie uznajmy za podjętą dziś, a formalności załatwię równolegle."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 497900,
+        "endMs": 504400,
+        "text": "Dobrze, zapisuję: budżet sześćdziesiąt tysięcy w podziale czterdzieści pięć, dwadzieścia pięć, piętnaście i piętnaście procent jest zatwierdzony."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 504850,
+        "endMs": 507150,
+        "text": "Tak, zatwierdzony. Dziękuję za przejrzysty podział."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 507600,
+        "endMs": 513700,
+        "text": "Teraz część kreatywna. Zaczynamy od rolek. Planujemy sześć krótkich filmów po dwadzieścia do trzydziestu sekund każdy."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 514150,
+        "endMs": 522850,
+        "text": "Zaproponuję trzy scenariusze, a Wy wybierzecie ten, który najbardziej pasuje. Jeden z baristą, jeden z klientem rano, jeden z samą kawą w zbliżeniu."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 523300,
+        "endMs": 532000,
+        "text": "Najbardziej podoba mi się wersja z klientem rano, bo to wpisuje się w hasło o pierwszej kawie. Chciałabym, żeby wystąpili prawdziwi stali bywalcy."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 532450,
+        "endMs": 539250,
+        "text": "To świetny pomysł, ale wymaga zgód na wykorzystanie wizerunku. Przygotujemy prosty formularz, a Wy poprosicie klientów w kawiarni."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 539700,
+        "endMs": 546500,
+        "text": "Zgody to dla mnie ważny temat. Zastanówmy się, czy nie lepiej obsadzić pracowników, a klientów zostawić w tle."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 546950,
+        "endMs": 554150,
+        "text": "Zgadzam się, to bezpieczniejsze. Główne role zagrają pracownicy, a klienci pojawią się tylko w tle i bez możliwości identyfikacji."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 554600,
+        "endMs": 559500,
+        "text": "Dobrze. A zdjęcia produktowe? Mamy część w wysokiej jakości, ale nie wszystkie nowości."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 559950,
+        "endMs": 567550,
+        "text": "Potrzebujemy logotypów w formatach wektorowych i zdjęć produktowych w minimum trzech tysiącach pikseli. Czy możecie to przesłać do szóstego listopada?"
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 568000,
+        "endMs": 573700,
+        "text": "Tak, zbiorę to z działu marki i wyślę przez udostępniony folder. Szósty listopada jest realny."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 574150,
+        "endMs": 579450,
+        "text": "Teraz influencerzy. Zamiast jednej dużej osoby proponujemy sześciu mikroinfluencerów lokalnych, po jednym na miasto."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 579900,
+        "endMs": 584500,
+        "text": "Dlaczego mikro? Duże nazwiska dają większy zasięg, a zarząd lubi duże liczby."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 584950,
+        "endMs": 594450,
+        "text": "Zasięg jest mniejszy, ale zaangażowanie dużo większe, a ludzie ufają lokalnym twórcom. W przypadku kawiarni liczy się to, że ktoś z okolicy poleca konkretne miejsce."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 594900,
+        "endMs": 602500,
+        "text": "Z danych z poprzednich kampanii wiem, że koszt pozyskania klienta przez mikroinfluencerów jest około dwukrotnie niższy niż przy dużych kontach."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 602950,
+        "endMs": 610150,
+        "text": "To mnie przekonuje. Ale chcę zobaczyć profile osób, zanim zaczniecie rozmowy, bo nie chcę kontrowersyjnych treści w naszej komunikacji."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 610600,
+        "endMs": 617100,
+        "text": "Przygotujemy listę dziesięciu kandydatów z krótkim opisem i statystykami, z której wybierzecie sześć. Wyślemy ją dziewiątego listopada."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 617550,
+        "endMs": 621350,
+        "text": "Dobrze, zatwierdzę listę najpóźniej jedenastego, żebyście mieli czas na umowy."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 621800,
+        "endMs": 627500,
+        "text": "Umowy z influencerami przygotujemy my, ale potrzebujemy od Was wzoru klauzuli o oznaczaniu współpracy reklamowej."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 627950,
+        "endMs": 634050,
+        "text": "Nasz dział prawny ma standardowy wzór, poproszę o niego i przekażę wam razem z regulaminem konkursu."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 634500,
+        "endMs": 642500,
+        "text": "Konkurs w social mediach to dobry moment, żeby go omówić. Chcemy, żeby uczestnicy publikowali zdjęcia swojej pierwszej kawy z oznaczeniem profilu."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 642950,
+        "endMs": 647150,
+        "text": "Jaką nagrodą? Nie możemy przesadzić z kosztami, bo budżet jest rozdzielony."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 647600,
+        "endMs": 655600,
+        "text": "Proponujemy roczny abonament na kawę dla jednej osoby w każdym mieście. To dla Was koszt własny, nie wydatek z budżetu kampanii."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 656050,
+        "endMs": 662850,
+        "text": "Sześć abonamentów to nadal sporo, ale mogę się zgodzić, jeśli ograniczymy to do trzech, a konkurs będzie ogólnopolski."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 663300,
+        "endMs": 667900,
+        "text": "To możliwe. Trzy nagrody główne i dodatkowo dwadzieścia kubków dla wyróżnionych uczestników."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 668350,
+        "endMs": 674050,
+        "text": "W takim układzie zgoda. Pamiętajcie tylko, że regulamin musi zatwierdzić nasz dział prawny przed publikacją."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 674500,
+        "endMs": 679800,
+        "text": "Oczywiście, przygotujemy projekt regulaminu, a Wy przekażecie go do działu prawnego do dziewiątego listopada."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 680250,
+        "endMs": 685550,
+        "text": "Dziewiąty listopada jest dla mnie w porządku, jeśli dostanę projekt do końca tego tygodnia."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 686000,
+        "endMs": 690600,
+        "text": "Projekt regulaminu wyślemy do piątku, czyli szóstego listopada, razem z wyceną produkcji."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 691050,
+        "endMs": 694450,
+        "text": "Świetnie, dziękuję. To zdejmuje mi z głowy sporo pracy."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 694900,
+        "endMs": 701400,
+        "text": "Dodam jeszcze, że konkurs będzie wspierany płatną reklamą, ale tylko w ramach budżetu Meta, bez osobnej puli."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 701850,
+        "endMs": 706450,
+        "text": "Dobrze, o to właśnie mi chodziło, żeby nie wychodzić poza ustaloną kwotę."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 706900,
+        "endMs": 713700,
+        "text": "Przechodzimy do strony. Obecny sklep ma kłopot z szybkością na telefonach, strona produktowa ładuje się około pięciu sekund."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 714150,
+        "endMs": 721750,
+        "text": "Wiem, kierownik IT mówi, że to przez obrazy w złym formacie, ale nie mamy na to zasobów w tym kwartale."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 722200,
+        "endMs": 728300,
+        "text": "Dlatego nie proponuję przebudowy sklepu. Zamiast tego zbudujemy jedną dedykowaną stronę lądowania kampanii, lekką i szybką."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 728750,
+        "endMs": 734450,
+        "text": "To znaczy, że wszystkie reklamy będą kierować na tę jedną stronę, a nie do sklepu?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 734900,
+        "endMs": 741700,
+        "text": "Tak, a na stronie będzie formularz zapisu na newsletter i przycisk do sklepu z produktami z oferty zimowej."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 742150,
+        "endMs": 748250,
+        "text": "Podoba mi się, że to oddzielne od sklepu. Czy będzie można ją łatwo zmieniać po starcie?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 748700,
+        "endMs": 754800,
+        "text": "Tak, zbudujemy ją na prostym szablonie, a po starcie będziemy testować dwa warianty nagłówka i przycisku."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 755250,
+        "endMs": 759850,
+        "text": "Wersję testową strony udostępnimy trzynastego listopada, żebyście mogli ją obejrzeć przed uruchomieniem."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 760300,
+        "endMs": 766400,
+        "text": "Trzynasty listopada to trochę późno. Zarząd chce zobaczyć ją przed startem i mieć czas na uwagi."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 766850,
+        "endMs": 773350,
+        "text": "Mogę przyspieszyć pierwszy układ strony na dwunasty, ale pełna wersja z formularzem i śledzeniem będzie gotowa trzynastego."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 773800,
+        "endMs": 779100,
+        "text": "Dwunastego mi wystarczy do wstępnego wglądu. Zorganizujmy w ten dzień spotkanie akceptacyjne wszystkich materiałów."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 779550,
+        "endMs": 784150,
+        "text": "Dobry pomysł, zaplanuję spotkanie akceptacyjne na dwunastego listopada, godzina dziesiąta, na godzinę."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 784600,
+        "endMs": 789500,
+        "text": "Dziesiąta pasuje, zaproszę też osobę z działu marki, żeby od razu zatwierdziła hasło."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 789950,
+        "endMs": 796450,
+        "text": "Dodam jeszcze, że na stronie będzie baner o zgodach i polityce prywatności, bo korzystamy z pikseli reklamowych."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 796900,
+        "endMs": 802600,
+        "text": "Tak, proszę, żeby wszystko było zgodne z RODO. Mamy gotowy tekst polityki, przekażę wam link."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 803050,
+        "endMs": 807650,
+        "text": "Dziękuję, link wystarczy. Wdrożę to razem z mechanizmem zgód na pliki cookie."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 808100,
+        "endMs": 814600,
+        "text": "Jeśli chodzi o adres strony, proponujemy poddomenę, na przykład zima.ziarnisty.pl, żeby łatwo było ją wyłączyć po kampanii."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 815050,
+        "endMs": 821550,
+        "text": "Poddomenę może założyć nasz dział IT, ale muszę ich o to poprosić dziś, bo mają kolejkę zgłoszeń."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 822000,
+        "endMs": 826200,
+        "text": "Wystarczy rekord w ustawieniach domeny, przygotuję instrukcję, którą możesz im przekazać."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 826650,
+        "endMs": 831550,
+        "text": "Teraz newsletter i kody rabatowe. Proponujemy serię powitalną trzech maili dla nowych subskrybentów."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 832000,
+        "endMs": 842300,
+        "text": "Pierwszy mail zaraz po zapisie z kodem na dziesięć procent zniżki na pierwsze zamówienie, drugi po trzech dniach z historią marki, trzeci po tygodniu z poradnikiem parzenia."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 842750,
+        "endMs": 849250,
+        "text": "Kod dziesięć procent może być problemem. Dział sprzedaży boi się, że kod trafi na portale z kuponami."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 849700,
+        "endMs": 854300,
+        "text": "Można zrobić kod jednorazowy, unikalny dla każdego subskrybenta, ważny przez czternaście dni."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 854750,
+        "endMs": 858550,
+        "text": "To rozwiązuje obawy. Czy nasz system sklepowy obsługuje kody jednorazowe?"
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 859000,
+        "endMs": 865100,
+        "text": "Obsługuje, ale trzeba wygenerować pulę kodów. Potrzebuję od Was potwierdzenia, że dział sprzedaży akceptuje taką zniżkę."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 865550,
+        "endMs": 871250,
+        "text": "Potwierdzę to z działem sprzedaży do jedenastego listopada i dam znać, ile kodów mogą wygenerować."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 871700,
+        "endMs": 878500,
+        "text": "Wpisujemy to jako zadanie. Od naszej strony seria powitalna będzie skonfigurowana do szesnastego listopada, czyli przed startem kampanii."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 878950,
+        "endMs": 884250,
+        "text": "Skonfiguruję ją w narzędziu do mailingu i przetestuję na kilku adresach wewnętrznych przed włączeniem."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 884700,
+        "endMs": 888900,
+        "text": "Proszę o wysłanie mi wersji testowych, chcę zobaczyć wszystkie trzy maile."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 889350,
+        "endMs": 893150,
+        "text": "Oczywiście, wersje testowe wyślę razem z materiałami na spotkanie akceptacyjne."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 893600,
+        "endMs": 901200,
+        "text": "Co do stałej komunikacji w newsletterze: raz w tygodniu, we wtorek rano, a w grudniu dodatkowa wiadomość z ofertą świąteczną."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 901650,
+        "endMs": 906250,
+        "text": "Dobrze, wtorek rano jest sprawdzonym terminem. Pamiętajcie o limicie dwóch wiadomości tygodniowo."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 906700,
+        "endMs": 909400,
+        "text": "Pamiętamy, to już zapisaliśmy jako twardą regułę."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 909850,
+        "endMs": 914750,
+        "text": "Raportowanie. Proponuję krótki raport tygodniowy w poniedziałek rano, jedna strona z najważniejszymi liczbami."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 915200,
+        "endMs": 920500,
+        "text": "Jakie liczby będą w tym raporcie? Zarząd lubi widzieć sprzedaż, a nie same kliknięcia."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 920950,
+        "endMs": 927050,
+        "text": "Wydatki, ROAS, liczba zamówień z kampanii, liczba nowych zapisów na newsletter i zasięg w mediach społecznościowych."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 927500,
+        "endMs": 932800,
+        "text": "To wystarczy. Dodajcie jeszcze koszt pozyskania zapisu i procent sprzedaży z kodów z newslettera."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 933250,
+        "endMs": 938150,
+        "text": "Dobrze, dodam te dwa wskaźniki. Pierwszy raport wyślę w poniedziałek dwudziestego trzeciego listopada."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 938600,
+        "endMs": 945100,
+        "text": "Przygotujemy też szablon raportu i prześlemy go Wam do osiemnastego listopada, żebyście mogli zgłosić uwagi do formy."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 945550,
+        "endMs": 952050,
+        "text": "Świetnie. Cel dla kampanii to ROAS minimum trzy i pół i tysiąc nowych subskrybentów w trzy miesiące."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 952500,
+        "endMs": 959300,
+        "text": "Zapisuję. Jeśli ROAS spadnie poniżej trzech przez dwa tygodnie z rzędu, zgłoszę to od razu i zaproponuję zmiany."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 959750,
+        "endMs": 965050,
+        "text": "Tak, proszę o szybką informację, nie czekajcie na poniedziałkowy raport, jeśli coś pójdzie źle."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 965500,
+        "endMs": 970400,
+        "text": "Do tego raz w miesiącu krótkie spotkanie podsumowujące, trzydzieści minut, ostatni piątek miesiąca."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 970850,
+        "endMs": 975450,
+        "text": "Ostatni piątek miesiąca mi pasuje. Pierwsze w listopadzie, w piątek dwudziestego ósmego."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 975900,
+        "endMs": 982400,
+        "text": "Dwudziesty ósmy listopada to dzień po Black Friday, więc będzie już pierwsza liczba z oferty. Idealny termin."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 982850,
+        "endMs": 990450,
+        "text": "Jedno ryzyko, o którym muszę wspomnieć. W grudniu większość kawiarni ma ograniczone godziny pracy, a kampania będzie wskazywać godziny otwarcia."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 990900,
+        "endMs": 996600,
+        "text": "Dobry punkt. Poprosimy o aktualne godziny otwarcia wszystkich lokali, żeby nie wprowadzać klientów w błąd."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 997050,
+        "endMs": 1001950,
+        "text": "Przekażę tabelę z godzinami do połowy listopada. Gdyby coś się zmieniło, dam znać."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 1002400,
+        "endMs": 1007700,
+        "text": "Zapiszmy też zasadę, że godziny otwarcia w reklamach lokalnych aktualizujemy ręcznie przy każdej zmianie."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 1008150,
+        "endMs": 1013450,
+        "text": "Drugie ryzyko to pogoda. Jeśli zima będzie łagodna, hasło o chłodnych dniach przestanie pasować."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 1013900,
+        "endMs": 1021100,
+        "text": "Zawsze mamy tę obawę. Pomóżmy sobie elastycznością: w razie ciepłej pogody przesuwamy akcent na rytuał, a nie na zimno."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 1021550,
+        "endMs": 1027250,
+        "text": "Mogę przygotować dwie wersje nagłówków, zimową i neutralną, i przełączać je w zależności od prognozy."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 1027700,
+        "endMs": 1033800,
+        "text": "To dobre rozwiązanie. Trzecie ryzyko to termin, bo wszystko dzieje się równolegle w ciągu trzech tygodni."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 1034250,
+        "endMs": 1041050,
+        "text": "Zgadzam się, dlatego rozpiska zadań z terminami jest kluczowa. Podsumuję ją za chwilę i wyślę mailem po spotkaniu."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 1041500,
+        "endMs": 1048000,
+        "text": "To podsumujmy ustalenia. Budżet sześćdziesiąt tysięcy zatwierdzony, bez reklam na TikToku w tej kampanii, test w styczniu."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 1048450,
+        "endMs": 1053050,
+        "text": "Zgadza się. Dodaj jeszcze, że sześciu mikroinfluencerów lokalnych zamiast jednego dużego nazwiska."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 1053500,
+        "endMs": 1060300,
+        "text": "Tak. Hasło główne Ciepły Początek, a na materiały w lokalach Pierwsza kawa zimy. Start pełnej kampanii dwudziestego listopada."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 1060750,
+        "endMs": 1065650,
+        "text": "Nowa strona lądowania zamiast przebudowy sklepu, wersja testowa trzynastego listopada, spotkanie akceptacyjne dwunastego."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 1066100,
+        "endMs": 1073700,
+        "text": "Newsletter z serią powitalną i kodami jednorazowymi, maksymalnie dwa maile tygodniowo. Konkurs z nagrodami, ale po zatwierdzeniu regulaminu przez prawników."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 1074150,
+        "endMs": 1081350,
+        "text": "Raport tygodniowy w poniedziałki, spotkanie miesięczne w ostatni piątek miesiąca, cel ROAS trzy i pół oraz tysiąc nowych zapisów."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 1081800,
+        "endMs": 1089800,
+        "text": "Z mojej strony zadania: dostępy do kont jeszcze dziś, materiały graficzne szóstego, regulamin do prawników dziewiątego, zatwierdzenie influencerów jedenastego, zamówienie dziesiątego."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 1090250,
+        "endMs": 1097850,
+        "text": "Z mojej: śledzenie konwersji do dwunastego, strona trzynastego, seria powitalna szesnastego, plan testów TikToka w połowie grudnia, scenariusze rolek dziesiątego."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 1098300,
+        "endMs": 1105100,
+        "text": "A ja wyślę wycenę i harmonogram szóstego, listę influencerów dziewiątego, szablon raportu osiemnastego i zorganizuję spotkanie akceptacyjne dwunastego."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 1105550,
+        "endMs": 1110150,
+        "text": "Zapomniałabym o kodach rabatowych. Potwierdzę je z działem sprzedaży do jedenastego listopada."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 1110600,
+        "endMs": 1114400,
+        "text": "Zapisane. Czy jest coś, co powinniśmy jeszcze omówić, zanim skończymy?"
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 1114850,
+        "endMs": 1119050,
+        "text": "Chyba nie. Dziękuję za bardzo konkretne spotkanie, to była dobra godzina."
+      },
+      {
+        "speakerId": "speaker_2",
+        "startMs": 1119500,
+        "endMs": 1125200,
+        "text": "Dziękuję, jeśli pojawią się pytania w trakcie przygotowań, piszcie od razu, nie czekajcie na spotkanie."
+      },
+      {
+        "speakerId": "speaker_1",
+        "startMs": 1125650,
+        "endMs": 1129850,
+        "text": "Dziękujemy wszystkim. Notatkę ze spotkania wyślemy jeszcze dziś. Do zobaczenia dwunastego."
+      },
+      {
+        "speakerId": "speaker_3",
+        "startMs": 1130300,
+        "endMs": 1131800,
+        "text": "Do zobaczenia, miłego dnia."
+      }
+    ]
+  },
+  "summary": {
+    "summary": "Spotkanie agencji marketingowej z klientem, siecią kawiarni Ziarnisty, poświęcone zimowej kampanii Ciepły Początek (listopad-styczeń). Omówiono wyniki października, koncepcję kampanii, budżet, działania kreatywne, stronę lądowania, newsletter, raportowanie i ryzyka.\n\nWyniki października: zasięg organiczny na Instagramie wzrósł o 22 proc., głównie dzięki rolkom z zaplecza kawiarni. Kampanie w Meta Ads miały ROAS 3,2 (cel 3,5), po zawężeniu odbiorców w drugiej połowie miesiąca około 4. Frazy markowe i lokalne w Google Ads konwertują na poziomie 6 proc., a frazy ogólne są zbyt drogie. Newsletter ma 8200 subskrybentów, otwieralność 31 proc. i klikalność 4 proc., ale baza rośnie wolno. Śledzenie konwersji na telefonach jest niepełne i wymaga naprawy przed startem.\n\nKoncepcja: jeden wątek poranny rytuał z kawą, hasło główne Ciepły Początek, a na materiały w lokalach Pierwsza kawa zimy. Kampania ma trzy odsłony: zapowiedź na początku listopada, pełny start 20 listopada i oferta świąteczna od Black Friday (27 listopada). Zamiast obniżki klient oferuje darmowy kubek przy zamówieniu powyżej 150 zł, bez licznika zapasów, z komunikatem o ofercie do wyczerpania zapasów. Ton komunikacji ma być ciepły i powściągliwy, z limitem dwóch maili tygodniowo.\n\nBudżet 60 000 zł netto na trzy miesiące zatwierdzono w podziale: 45 proc. Meta Ads, 25 proc. Google Ads, 15 proc. influencerzy i 15 proc. produkcja. Reklamy na TikToku nie są częścią tej kampanii, a ich test zaplanowano na styczeń. Produkcja obejmuje dwa krótkie dni zdjęciowe w Poznaniu i sześć rolek, w których wystąpią pracownicy, a klienci tylko w tle. Zamiast jednego dużego twórcy kampania korzysta z sześciu lokalnych mikroinfluencerów. Konkurs w mediach społecznościowych ma trzy nagrody główne (roczny abonament na kawę) i dwadzieścia kubków, a jego regulamin musi zatwierdzić dział prawny klienta.\n\nZamiast przebudowy sklepu powstanie lekka strona lądowania na poddomenie, z formularzem zapisu na newsletter i testami A/B nagłówka. Seria powitalna newslettera składa się z trzech maili z jednorazowym kodem na 10 proc. zniżki. Raport tygodniowy będzie wysyłany w poniedziałki, a spotkanie podsumowujące odbywa się w ostatni piątek miesiąca. Cele kampanii to ROAS co najmniej 3,5 i tysiąc nowych subskrybentów w trzy miesiące. Główne ryzyka to godziny otwarcia lokali w grudniu, niestabilna pogoda i napięty termin; spotkanie akceptacyjne materiałów ustalono na 12 listopada.",
+    "decisions": [
+      {
+        "text": "Budżet kampanii zimowej wynosi 60 000 zł netto na listopad-styczeń, w podziale: 45 proc. Meta Ads, 25 proc. Google Ads, 15 proc. influencerzy, 15 proc. produkcja. Przekroczenie wymaga konsultacji z klientem.",
+        "speakerIds": [
+          "speaker_1",
+          "speaker_2",
+          "speaker_3"
+        ]
+      },
+      {
+        "text": "Kampania nosi nazwę Ciepły Początek, a na materiały w punktach sprzedaży używamy hasła Pierwsza kawa zimy. Pełny start kampanii to 20 listopada.",
+        "speakerIds": [
+          "speaker_1",
+          "speaker_3"
+        ]
+      },
+      {
+        "text": "W Black Friday nie ma klasycznej obniżki. Klient oferuje darmowy kubek przy zamówieniu powyżej 150 zł, bez licznika zapasów, z komunikatem o ofercie do wyczerpania zapasów.",
+        "speakerIds": [
+          "speaker_1",
+          "speaker_3"
+        ]
+      },
+      {
+        "text": "W tej kampanii nie uruchamiamy reklam na TikToku. Test na małej próbie odbędzie się w styczniu, po akceptacji planu testów przez klienta.",
+        "speakerIds": [
+          "speaker_2",
+          "speaker_3"
+        ]
+      },
+      {
+        "text": "Kampania korzysta z sześciu lokalnych mikroinfluencerów, po jednym na miasto, zamiast jednego dużego twórcy. Klient wybiera ich z listy dziesięciu kandydatów.",
+        "speakerIds": [
+          "speaker_1",
+          "speaker_2",
+          "speaker_3"
+        ]
+      },
+      {
+        "text": "Zamiast przebudowy sklepu powstaje dedykowana, lekka strona lądowania kampanii na poddomenie, z formularzem zapisu na newsletter i testami dwóch wariantów nagłówka.",
+        "speakerIds": [
+          "speaker_2",
+          "speaker_3"
+        ]
+      },
+      {
+        "text": "Newsletter wysyła maksymalnie dwa maile tygodniowo i żadnych dodatkowych wysyłek bez zgody klienta. Nowi subskrybenci dostają serię powitalną trzech maili z jednorazowym kodem na 10 proc. zniżki, ważnym 14 dni.",
+        "speakerIds": [
+          "speaker_1",
+          "speaker_2",
+          "speaker_3"
+        ]
+      },
+      {
+        "text": "Konkurs w mediach społecznościowych ma trzy nagrody główne i dwadzieścia kubków dla wyróżnionych. Publikacja jest możliwa dopiero po zatwierdzeniu regulaminu przez dział prawny klienta.",
+        "speakerIds": [
+          "speaker_1",
+          "speaker_3"
+        ]
+      },
+      {
+        "text": "W rolkach główne role grają pracownicy, a klienci pojawiają się tylko w tle i bez możliwości identyfikacji, co ogranicza potrzebę zgód na wizerunek.",
+        "speakerIds": [
+          "speaker_1",
+          "speaker_3"
+        ]
+      },
+      {
+        "text": "Raport tygodniowy trafia do klienta w poniedziałki, a spotkanie podsumowujące odbywa się w ostatni piątek miesiąca. Cele kampanii to ROAS co najmniej 3,5 i tysiąc nowych subskrybentów w trzy miesiące.",
+        "speakerIds": [
+          "speaker_1",
+          "speaker_2",
+          "speaker_3"
+        ]
+      },
+      {
+        "text": "Spotkanie akceptacyjne materiałów odbędzie się 12 listopada o 10:00. Wersja testowa strony lądowania jest gotowa 13 listopada.",
+        "speakerIds": [
+          "speaker_1",
+          "speaker_2",
+          "speaker_3"
+        ]
+      }
+    ],
+    "tasks": [
+      {
+        "speakerId": "speaker_3",
+        "action": "Przekazać agencji dostępy do konta reklamowego i Search Console.",
+        "deadline": "2026-11-05"
+      },
+      {
+        "speakerId": "speaker_1",
+        "action": "Wysłać klientowi wycenę produkcji, harmonogram dni zdjęciowych i projekt regulaminu konkursu.",
+        "deadline": "2026-11-06"
+      },
+      {
+        "speakerId": "speaker_3",
+        "action": "Dostarczyć logotypy w formatach wektorowych i zdjęcia produktowe w wysokiej rozdzielczości.",
+        "deadline": "2026-11-06"
+      },
+      {
+        "speakerId": "speaker_1",
+        "action": "Przygotować listę dziesięciu kandydatów na mikroinfluencerów z opisem i statystykami.",
+        "deadline": "2026-11-09"
+      },
+      {
+        "speakerId": "speaker_3",
+        "action": "Przekazać projekt regulaminu konkursu do działu prawnego.",
+        "deadline": "2026-11-09"
+      },
+      {
+        "speakerId": "speaker_2",
+        "action": "Przygotować trzy propozycje scenariuszy rolek.",
+        "deadline": "2026-11-10"
+      },
+      {
+        "speakerId": "speaker_3",
+        "action": "Wystawić zamówienie w systemie zakupowym po akceptacji wyceny.",
+        "deadline": "2026-11-10"
+      },
+      {
+        "speakerId": "speaker_3",
+        "action": "Zatwierdzić listę sześciu mikroinfluencerów.",
+        "deadline": "2026-11-11"
+      },
+      {
+        "speakerId": "speaker_3",
+        "action": "Potwierdzić z działem sprzedaży kody rabatowe i liczbę kodów jednorazowych.",
+        "deadline": "2026-11-11"
+      },
+      {
+        "speakerId": "speaker_2",
+        "action": "Skonfigurować śledzenie konwersji (GA4 i piksel reklamowy).",
+        "deadline": "2026-11-12"
+      },
+      {
+        "speakerId": "speaker_1",
+        "action": "Zorganizować spotkanie akceptacyjne materiałów na 12 listopada o 10:00.",
+        "deadline": "2026-11-12"
+      },
+      {
+        "speakerId": "speaker_2",
+        "action": "Udostępnić wersję testową strony lądowania z formularzem i śledzeniem.",
+        "deadline": "2026-11-13"
+      },
+      {
+        "speakerId": "speaker_3",
+        "action": "Przekazać tabelę godzin otwarcia lokali na grudzień.",
+        "deadline": "2026-11-15"
+      },
+      {
+        "speakerId": "speaker_2",
+        "action": "Skonfigurować i przetestować serię powitalną newslettera.",
+        "deadline": "2026-11-16"
+      },
+      {
+        "speakerId": "speaker_1",
+        "action": "Wysłać klientowi szablon raportu tygodniowego do uwag.",
+        "deadline": "2026-11-18"
+      },
+      {
+        "speakerId": "speaker_2",
+        "action": "Wysłać plan testów reklam na TikToku w styczniu z budżetem i miarami sukcesu.",
+        "deadline": "2026-12-16"
+      }
+    ]
+  }
+}

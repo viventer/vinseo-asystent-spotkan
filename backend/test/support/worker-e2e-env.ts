@@ -1,5 +1,5 @@
 process.env.DATABASE_URL ??=
-  'postgresql://postgres:postgres@localhost:5432/vinseo';
+  'postgresql://postgres:postgres@localhost:5432/vinseo_test';
 process.env.REDIS_URL ??= 'redis://localhost:6379';
 process.env.QUEUE_PREFIX = 'vinseo-e2e';
 process.env.WORKER_JOB_ATTEMPTS = '5';

@@ -14,7 +14,8 @@ async function bootstrap() {
   if (env.PORT === undefined) {
     throw new Error('Invalid environment configuration: PORT');
   }
-  await app.listen(env.PORT);
+  // Other Compose services reach the API by its service name.
+  await app.listen(env.PORT, '0.0.0.0');
 }
 
 await bootstrap();

@@ -1,4 +1,5 @@
 import { localSeed } from '../../database/local-seed.js';
+import { FakeTranscriptionAdapter } from '../../transcripts/adapters/fake-transcription.adapter.js';
 import { buildSummaryPayload } from '../summary-payload.js';
 import { FakeSummaryAdapter } from './fake-summary.adapter.js';
 import { summaryResultSchema } from './summary.adapter.js';
@@ -31,22 +32,47 @@ describe('FakeSummaryAdapter', () => {
     expect(summaryResultSchema.parse(first)).toEqual(first);
   });
 
-  it('uses local speaker ids and a fixed deadline', async () => {
+  it('returns a summary, decisions, and tasks sized for a long meeting', async () => {
+    const result = summaryResultSchema.parse(await adapter.summarize(payload));
+
+    expect(result.summary.length).toBeGreaterThanOrEqual(1_500);
+    expect(result.decisions.length).toBeGreaterThanOrEqual(8);
+    expect(result.tasks.length).toBeGreaterThanOrEqual(12);
+  });
+
+  it('refers only to speakers of the fixture transcript and uses real dates', async () => {
+    const { segments } = await new FakeTranscriptionAdapter().transcribe({
+      meetingId: localSeed.meetingId,
+      recordingExternalId: `fake-recording:${localSeed.meetingId}`,
+    });
+    const transcriptSpeakers = new Set(
+      segments.map((segment) => segment.speakerId),
+    );
     const result = summaryResultSchema.parse(await adapter.summarize(payload));
     const speakerIds = [
       ...result.decisions.flatMap((decision) => decision.speakerIds),
       ...result.tasks.map((task) => task.speakerId),
     ];
 
-    expect(result.decisions.length).toBeGreaterThan(0);
-    expect(result.tasks.length).toBeGreaterThan(0);
     expect(
-      speakerIds.every((speakerId) => /^speaker_[123]$/.test(speakerId)),
+      speakerIds.every((speakerId) => transcriptSpeakers.has(speakerId)),
     ).toBe(true);
-    expect(result.tasks.map((task) => task.deadline)).toEqual([
-      '2026-11-13',
-      '2026-11-13',
-    ]);
+    expect(
+      result.tasks.every(
+        (task) =>
+          !Number.isNaN(Date.parse(task.deadline)) &&
+          task.deadline >= '2026-11-04',
+      ),
+    ).toBe(true);
+  });
+
+  it('returns a fresh copy so a caller cannot change the next result', async () => {
+    const first = summaryResultSchema.parse(await adapter.summarize(payload));
+    first.tasks.length = 0;
+
+    const second = summaryResultSchema.parse(await adapter.summarize(payload));
+
+    expect(second.tasks.length).toBeGreaterThan(0);
   });
 
   it('returns no names, email addresses, or person mapping', async () => {

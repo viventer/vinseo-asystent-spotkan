@@ -16,7 +16,7 @@ import { ApplicationExceptionFilter } from '../../src/shared/filters/application
 
 process.env.PORT ??= '3000';
 process.env.DATABASE_URL ??=
-  'postgresql://postgres:postgres@localhost:5432/vinseo';
+  'postgresql://postgres:postgres@localhost:5432/vinseo_test';
 process.env.REDIS_URL ??= 'redis://localhost:6379';
 
 type NestImport =

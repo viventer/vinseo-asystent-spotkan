@@ -93,8 +93,23 @@ separate processes, but share feature modules and application services.
 - Verify every authorization rule with allow and deny cases.
 - Verify invalid summary output, outbound-data filtering, idempotency, and
   repeated job delivery.
-- Provide one documented command that starts the stack, seeds the example
-  meeting, enqueues processing, and allows reading the results.
+- Extend Docker Compose to start the complete local stack: PostgreSQL, Redis,
+  the NestJS API, and the separate BullMQ worker.
+- Make the first command start the stack, wait for PostgreSQL and Redis
+  healthchecks, apply migrations, and run the idempotent local seed:
+  `docker compose up --build`.
+- Provide a second command that enqueues processing for the prepared example
+  meeting, waits until the pipeline finishes, and exports its results to
+  Markdown files in the repository:
+  `docker compose run --rm demo`.
+- Write the example results to separate files:
+  `artifacts/example-meeting/transcript.md`,
+  `artifacts/example-meeting/summary.md`,
+  `artifacts/example-meeting/decisions.md`, and
+  `artifacts/example-meeting/tasks.md`.
+- Keep the API and worker as separate long-running Compose services. Starting
+  the stack must not automatically process the example meeting; processing is
+  an explicit second command.
 
 ## Intentionally excluded from version zero
 

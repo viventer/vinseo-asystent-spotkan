@@ -13,7 +13,7 @@ import { ApplicationError } from '../src/shared/errors/application-error.js';
 
 process.env.PORT ??= '3000';
 process.env.DATABASE_URL ??=
-  'postgresql://postgres:postgres@localhost:5432/vinseo';
+  'postgresql://postgres:postgres@localhost:5432/vinseo_test';
 process.env.REDIS_URL ??= 'redis://localhost:6379';
 
 const missingMeetingId = '77777777-7777-4777-8777-777777777777';

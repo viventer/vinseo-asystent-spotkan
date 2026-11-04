@@ -12,19 +12,24 @@ import { seedLocalDatabase } from '../src/database/seed.js';
 import { MeetingsModule } from '../src/meetings/meetings.module.js';
 import { ApplicationError } from '../src/shared/errors/application-error.js';
 import { ApplicationExceptionFilter } from '../src/shared/filters/application-exception.filter.js';
+import { readExampleMeetingFixture } from '../src/shared/fixtures/example-meeting-fixture.js';
+import { transcriptionResultSchema } from '../src/transcripts/adapters/transcription.adapter.js';
 import { transcriptSegments } from '../src/transcripts/entities/transcript-segment.table.js';
 import { TranscriptsModule } from '../src/transcripts/transcripts.module.js';
 import { TranscriptsService } from '../src/transcripts/transcripts.service.js';
 
 process.env.PORT ??= '3000';
 process.env.DATABASE_URL ??=
-  'postgresql://postgres:postgres@localhost:5432/vinseo';
+  'postgresql://postgres:postgres@localhost:5432/vinseo_test';
 process.env.REDIS_URL ??= 'redis://localhost:6379';
 
 const missingMeetingId = '77777777-7777-4777-8777-777777777777';
 const unknownUserId = '99999999-9999-4999-8999-999999999999';
 const otherMeetingId = '66666666-6666-4666-8666-666666666666';
 const recordingExternalId = `fake-recording:${localSeed.meetingId}`;
+const segmentCount = transcriptionResultSchema.parse(
+  readExampleMeetingFixture().transcript,
+).segments.length;
 
 describe('transcript segments against PostgreSQL', () => {
   let app: NestNodeApplication;
@@ -97,10 +102,10 @@ describe('transcript segments against PostgreSQL', () => {
     });
 
     expect(second).toEqual(first);
-    expect(first).toHaveLength(10);
-    expect(first.map((segment) => segment.position)).toEqual([
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-    ]);
+    expect(first).toHaveLength(segmentCount);
+    expect(first.map((segment) => segment.position)).toEqual(
+      Array.from({ length: segmentCount }, (_, index) => index),
+    );
 
     const rows = await storedRows();
     expect(rows).toEqual(
@@ -125,7 +130,7 @@ describe('transcript segments against PostgreSQL', () => {
     ]);
 
     expect(right).toEqual(left);
-    await expect(storedRows()).resolves.toHaveLength(10);
+    await expect(storedRows()).resolves.toHaveLength(segmentCount);
   });
 
   it('stores nothing when the meeting does not exist', async () => {
@@ -170,10 +175,10 @@ describe('transcript segments against PostgreSQL', () => {
           text: string;
         }[];
       };
-      expect(body.segments).toHaveLength(10);
+      expect(body.segments).toHaveLength(segmentCount);
       expect(
         body.segments.map((segment) => segment.speaker.displayName),
-      ).toEqual(Array.from({ length: 10 }, () => null));
+      ).toEqual(Array.from({ length: segmentCount }, () => null));
       expect(body.segments.map((segment) => segment.text)).toEqual(
         (await storedRows()).map((row) => row.text),
       );

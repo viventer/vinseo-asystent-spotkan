@@ -15,7 +15,7 @@ import { UsersService } from '../src/users/users.service.js';
 
 process.env.PORT ??= '3000';
 process.env.DATABASE_URL ??=
-  'postgresql://postgres:postgres@localhost:5432/vinseo';
+  'postgresql://postgres:postgres@localhost:5432/vinseo_test';
 process.env.REDIS_URL ??= 'redis://localhost:6379';
 
 const unknownUserId = '99999999-9999-4999-8999-999999999999';
