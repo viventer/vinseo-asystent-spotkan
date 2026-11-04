@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { loadEnv, type Env } from './env.schema.js';
+import { loadEnv, loadWorkerEnv, type Env } from './env.schema.js';
+import { currentProcessRole } from './process-role.js';
 
 export type { Env };
 
@@ -9,7 +10,10 @@ export const ENV = Symbol('ENV');
   providers: [
     {
       provide: ENV,
-      useFactory: (): Env => loadEnv(process.env),
+      useFactory: (): Env =>
+        currentProcessRole() === 'worker'
+          ? loadWorkerEnv(process.env)
+          : loadEnv(process.env),
     },
   ],
   exports: [ENV],

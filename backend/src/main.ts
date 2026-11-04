@@ -11,6 +11,9 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new ApplicationExceptionFilter());
   const env = app.get<Env>(ENV);
+  if (env.PORT === undefined) {
+    throw new Error('Invalid environment configuration: PORT');
+  }
   await app.listen(env.PORT);
 }
 

@@ -61,7 +61,7 @@ As a meeting participant, I want a badly shaped summary to stay unpublished, so 
 - Do not judge whether the text is true or whether the Polish is good.
 - On failure, write nothing for the summary or the tasks. Leave the meeting and the transcript in place.
 - A later attempt that returns a valid structure stores exactly one summary and one set of tasks.
-- Do not fix a retry count for this version.
+- Retry a failed step a bounded number of times. `WORKER_JOB_ATTEMPTS` is the attempt count (default 5). `WORKER_JOB_BACKOFF_MS` is the exponential backoff delay in milliseconds (default 1000). `WORKER_STEP_TIMEOUT_MS` is the limit for one attempt (default 30000); a timed-out attempt fails and is retried. After the last attempt the meeting and any result stored by an earlier step stay in place.
 
 ## Restart and retry
 
@@ -72,6 +72,7 @@ As a developer running the skeleton, I want a crash or a repeated delivery to ke
 - Before writing, check whether that result is already stored. BullMQ may deliver the same job more than once.
 - A crash before the commit leaves the step unfinished, and the next delivery continues it.
 - A crash after the commit leaves the stored result in place. A lost queue does not delete the meeting.
+- Use the bounded attempt count, backoff, and step timeout from the invalid-summary rules. A stalled job is delivered again. The worker allows one such recovery (`maxStalledCount` 1) and then fails the job. The meeting remains.
 
 ## Local identity
 

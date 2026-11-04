@@ -93,7 +93,7 @@ Validation checks that shape. It does not judge whether the summary is true or w
 - a task has no speaker, no action, or no deadline
 - the speaker is a name, an email address, or an id that is not in this meeting's transcript
 
-An invalid result is not published. The meeting remains, and the transcript from the earlier step remains readable. A read of the summary or the tasks does not return the invalid result. The specification does not set a retry count or name pipeline states. A later attempt that returns a valid structure stores exactly one summary and one set of tasks.
+An invalid result is not published. The meeting remains, and the transcript from the earlier step remains readable. A read of the summary or the tasks does not return the invalid result. A failed step is retried a bounded number of times, using the attempt count, backoff, and step timeout from the specification. The specification does not name pipeline states. A later attempt that returns a valid structure stores exactly one summary and one set of tasks.
 
 A repeated delivery of a step that already stored its result does not add a copy. A crash before that write leaves the step unfinished, and the next delivery continues it. A crash after the write leaves the stored result in place.
 
