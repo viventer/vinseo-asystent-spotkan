@@ -1,230 +1,230 @@
-# Transcription model
+# Model transkrypcji
 
-Decision record for the speech-to-text model and for speaker separation on the mixed Meet recording. Written on 2026-10-30 from research and from the choice made before implementation.
+Rejestr decyzji dotyczący modelu speech-to-text i rozdzielenia mówców na zmiksowanym nagraniu z Meet. Sporządzony 2026-10-30 na podstawie researchu oraz wyboru dokonanego przed implementacją.
 
-This file is the full record. The Part A document should condense section 7. The README section on AI usage should follow section 6.
+Ten plik jest pełnym zapisem. Dokument Part A powinien skrócić sekcję 7. Sekcja README dotycząca użycia AI powinna być zgodna z sekcją 6.
 
-The summary model is a separate decision and is not in this file. Speaker ids, human mapping, and what the summary model is allowed to see stay as written in `notes/transcription-workflow-recap.md`. This file only picks the model that turns the recording into segments.
+Model podsumowujący jest osobną decyzją i nie został opisany w tym pliku. Identyfikatory mówców, mapowanie na osoby oraz zakres danych, które model podsumowujący może zobaczyć, pozostają opisane w `notes/transcription-workflow-recap.md`. Ten plik wybiera wyłącznie model, który zamienia nagranie na segmenty.
 
-Claims below are marked **Fact** (checked against a source on the date given) or **Assumption** (not verified, and open to change).
+Poniższe twierdzenia są oznaczone jako **Fakt** (sprawdzony względem źródła w podanym dniu) albo **Założenie** (niesprawdzone i możliwe do zmiany).
 
-## 1. The choice
+## 1. Wybór
 
-**Chosen for the written answer: AssemblyAI Universal-2**, on the EU endpoint, with standard speaker diarization, the language pair English and Polish, and the shortest retention the API allows.
+**Wybrany do odpowiedzi pisemnej: AssemblyAI Universal-2**, na endpointcie EU, ze standardową diarizacją mówców, parą języków angielski i polski oraz najkrótszym okresem przechowywania dozwolonym przez API.
 
-The choice is not closed. Two checks come before I treat it as settled, and either one can replace the model or the whole approach:
+Wybór nie jest zamknięty. Zanim uznam go za ostateczny, trzeba wykonać dwie kontrole; każda z nich może doprowadzić do zmiany modelu albo całego podejścia:
 
-1. A specialist has to explain the storage difference between ElevenLabs and AssemblyAI. I will not treat the EU endpoint as a legal conclusion.
-2. I need a sample conversation, close to a real Vinseo meeting, run through both models. The sample has to show that a model can separate speakers on this kind of audio. If neither can, the mixed-file approach has to change.
+1. Specjalista musi wyjaśnić różnicę w przechowywaniu danych między ElevenLabs i AssemblyAI. Nie będę traktować endpointu EU jako wniosku prawnego.
+2. Potrzebuję przykładowej rozmowy, zbliżonej do prawdziwego spotkania Vinseo, przepuszczonej przez oba modele. Próbka musi pokazać, że model potrafi rozdzielić mówców na tego rodzaju nagraniu. Jeśli żaden model sobie z tym nie poradzi, podejście ze zmiksowanym plikiem trzeba zmienić.
 
-## 2. Verified facts
+## 2. Zweryfikowane fakty
 
-Checked on 2026-10-30. Prices are list prices, excluding tax. The volume is the assignment's 300 hours of meetings a month. The bill below assumes one mono hour of audio per hour of meeting. AssemblyAI bills multichannel audio per channel, so a stereo file sent as two channels would double that bill.
+Sprawdzone 2026-10-30. Ceny są cenami katalogowymi i nie obejmują podatku. Wolumen to wskazane w zadaniu 300 godzin spotkań miesięcznie. Poniższa kalkulacja zakłada jedną monofoniczną godzinę audio na godzinę spotkania. AssemblyAI rozlicza audio wielokanałowe za każdy kanał, więc plik stereo wysłany jako dwa kanały podwoiłby rachunek.
 
-### What the assignment asks of this choice
+### Czego zadanie wymaga od tego wyboru
 
-**Fact.** Part A question 4 asks for the tools and models for transcription, speaker recognition, and summaries: quality for Polish, cost, privacy, and maintenance. Source: `docs/zadanie.md`.
+**Fakt.** Pytanie 4 w Part A wymaga wskazania narzędzi i modeli do transkrypcji, rozpoznawania mówców i podsumowań: jakości dla języka polskiego, kosztu, prywatności i utrzymania. Źródło: `docs/zadanie.md`.
 
-**Fact.** Meetings are in Polish with English campaign names and jargon, usually 45 minutes, with 2–6 participants, some of them outside the company. About 300 hours a month. Source: `docs/zadanie.md`.
+**Fakt.** Spotkania odbywają się po polsku, z angielskimi nazwami kampanii i żargonem, zwykle trwają 45 minut, uczestniczy w nich 2–6 osób, a część z nich jest spoza firmy. Około 300 godzin miesięcznie. Źródło: `docs/zadanie.md`.
 
-**Fact.** The recording is one mixed MP4. Speaker separation for the first version is diarization of that mix, producing speaker ids local to the meeting. Meet's own saved transcript does not include Polish. Source: `notes/transcription-workflow-recap.md`.
+**Fakt.** Nagranie jest jednym zmiksowanym plikiem MP4. Rozdzielenie mówców w pierwszej wersji polega na diarizacji tego miksu i tworzeniu identyfikatorów mówców lokalnych dla spotkania. Własna zapisana transkrypcja Meet nie obejmuje języka polskiego. Źródło: `notes/transcription-workflow-recap.md`.
 
-### AssemblyAI models and Polish
+### Modele AssemblyAI i język polski
 
-**Fact.** Universal-3.5 Pro supports 18 languages: English (global, Australian, British, US), Spanish, French, German, Italian, Portuguese, Arabic, Danish, Dutch, Finnish, Hebrew, Hindi, Japanese, Mandarin, Norwegian, Swedish, Turkish, and Vietnamese. Polish is not on that list. Language codes for the same 18 are published on the realtime language page. Sources: [Code switching](https://www.assemblyai.com/docs/pre-recorded-audio/code-switching), [Supported languages](https://www.assemblyai.com/docs/pre-recorded-audio/supported-languages), [Steer toward known languages](https://www.assemblyai.com/docs/voice-agents/voice-agent-api/language-selection).
+**Fakt.** Universal-3.5 Pro obsługuje 18 języków: angielski (globalny, australijski, brytyjski, amerykański), hiszpański, francuski, niemiecki, włoski, portugalski, arabski, duński, niderlandzki, fiński, hebrajski, hindi, japoński, mandaryński, norweski, szwedzki, turecki i wietnamski. Polskiego nie ma na tej liście. Kody języków dla tych samych 18 języków są opublikowane na stronie dotyczącej języków realtime. Źródła: [Code switching](https://www.assemblyai.com/docs/pre-recorded-audio/code-switching), [Supported languages](https://www.assemblyai.com/docs/pre-recorded-audio/supported-languages), [Steer toward known languages](https://www.assemblyai.com/docs/voice-agents/voice-agent-api/language-selection).
 
-**Fact.** Universal-2 supports Polish. The language page puts Polish in the high-accuracy group, word error rate at or below 10%. On FLEURS, updated January 2026, Universal-2 scores 6.63% WER for Polish and 4.38% for English. Universal-3.5 Pro has no Polish score. The same page warns that public benchmarks can be inflated when a model was trained on the test set, and that a real evaluation should use one's own audio. Sources: [Supported languages](https://www.assemblyai.com/docs/pre-recorded-audio/supported-languages), [Benchmarks](https://www.assemblyai.com/docs/pre-recorded-audio/benchmarks).
+**Fakt.** Universal-2 obsługuje język polski. Strona języków umieszcza polski w grupie wysokiej dokładności, z word error rate na poziomie nie większym niż 10%. W FLEURS, zaktualizowanym w styczniu 2026 roku, Universal-2 osiąga 6.63% WER dla języka polskiego i 4.38% dla angielskiego. Universal-3.5 Pro nie ma wyniku dla języka polskiego. Ta sama strona ostrzega, że publiczne benchmarki mogą zawyżać wyniki, gdy model był trenowany na zbiorze testowym, oraz że prawdziwa ewaluacja powinna używać własnego audio. Źródła: [Supported languages](https://www.assemblyai.com/docs/pre-recorded-audio/supported-languages), [Benchmarks](https://www.assemblyai.com/docs/pre-recorded-audio/benchmarks).
 
-**Fact.** If `speech_models` is omitted, it defaults to `["universal-3-5-pro", "universal-2"]`. Universal-3.5 Pro handles its 18 languages. Anything else falls back to Universal-2. Source: [Model selection](https://www.assemblyai.com/docs/pre-recorded-audio/select-the-speech-model).
+**Fakt.** Jeśli `speech_models` zostanie pominięte, domyślnie przyjmuje wartość `["universal-3-5-pro", "universal-2"]`. Universal-3.5 Pro obsługuje swoje 18 języków. Wszystko inne przechodzi do Universal-2. Źródło: [Model selection](https://www.assemblyai.com/docs/pre-recorded-audio/select-the-speech-model).
 
-**Fact.** Standard async diarization is an add-on of $0.02 per hour on Universal-3.5 Pro and on Universal-2. An experimental async diarization add-on is $0.065 per hour on both, described as better for many speakers or difficult audio. The diarization guide enables it with `speaker_labels`. The API requires `punctuate: true` when speaker labels are on. I did not find a table that says speaker labels work for every language. The language page says an unsupported feature, when the language is set by hand, fails the request, and the example error names `speaker_labels`. Sources: [pricing](https://www.assemblyai.com/pricing), last updated 2026-10-27, [Speaker diarization](https://www.assemblyai.com/docs/pre-recorded-audio/label-speakers), [Supported languages](https://www.assemblyai.com/docs/pre-recorded-audio/supported-languages).
+**Fakt.** Standardowa diarizacja asynchroniczna jest dodatkiem w cenie $0.02 za godzinę zarówno dla Universal-3.5 Pro, jak i Universal-2. Eksperymentalny dodatek do asynchronicznej diarizacji kosztuje $0.065 za godzinę dla obu modeli i jest opisywany jako lepszy przy wielu mówcach lub trudnym audio. Przewodnik dotyczący diarizacji włącza ją przez `speaker_labels`. API wymaga `punctuate: true`, gdy włączone są etykiety mówców. Nie znalazłem tabeli potwierdzającej, że etykiety mówców działają dla każdego języka. Strona języków mówi, że nieobsługiwana funkcja, gdy język zostanie ustawiony ręcznie, powoduje odrzucenie żądania, a przykładowy błąd wymienia `speaker_labels`. Źródła: [pricing](https://www.assemblyai.com/pricing), ostatnia aktualizacja 2026-10-27, [Speaker diarization](https://www.assemblyai.com/docs/pre-recorded-audio/label-speakers), [Supported languages](https://www.assemblyai.com/docs/pre-recorded-audio/supported-languages).
 
-**Fact.** On Universal-2, code switching is limited to two language codes, and one of them must be English. `["en", "pl"]` fits that rule. `language_codes` is not combined with `language_detection`. Source: [Code switching](https://www.assemblyai.com/docs/pre-recorded-audio/code-switching).
+**Fakt.** W Universal-2 code switching jest ograniczony do dwóch kodów języków, a jednym z nich musi być angielski. `["en", "pl"]` spełnia tę regułę. `language_codes` nie łączy się z `language_detection`. Źródło: [Code switching](https://www.assemblyai.com/docs/pre-recorded-audio/code-switching).
 
-**Fact.** Keyterm prompting on Universal-2 async is $0.05 per hour, up to 200 terms. Source: [pricing](https://www.assemblyai.com/pricing).
+**Fakt.** Keyterm prompting w Universal-2 async kosztuje $0.05 za godzinę i obejmuje maksymalnie 200 terminów. Źródło: [pricing](https://www.assemblyai.com/pricing).
 
-### AssemblyAI price at 300 hours
+### Cena AssemblyAI przy 300 godzinach
 
-**Fact.** Universal-2 is $0.15 per hour. With standard diarization the rate is $0.17 per hour. With experimental diarization it is $0.215 per hour. The EU endpoint is the same price. Source: [pricing](https://www.assemblyai.com/pricing).
+**Fakt.** Universal-2 kosztuje $0.15 za godzinę. Ze standardową diarizacją stawka wynosi $0.17 za godzinę. Z eksperymentalną diarizacją wynosi $0.215 za godzinę. Endpoint EU ma tę samą cenę. Źródło: [pricing](https://www.assemblyai.com/pricing).
 
-| What is on                                    | Rate     | 300 hours |
-| --------------------------------------------- | -------- | --------- |
-| Universal-2 + standard diarization            | $0.17/h  | $51       |
-| Universal-2 + experimental diarization        | $0.215/h | $64.50    |
-| Universal-2 + standard diarization + keyterms | $0.22/h  | $66       |
+| Co obejmuje                                    | Stawka   | 300 godzin |
+| ---------------------------------------------- | -------- | ---------- |
+| Universal-2 + standardowa diarizacja           | $0.17/h  | $51        |
+| Universal-2 + eksperymentalna diarizacja       | $0.215/h | $64.50     |
+| Universal-2 + standardowa diarizacja + keyterms | $0.22/h | $66        |
 
-**Assumption.** A fallback from Universal-3.5 Pro to Universal-2 is billed at the Universal-2 rate. The rate card is per model. I did not find a sentence that says the fallback is billed from `speech_model_used`. The request for this project sets `speech_models` to Universal-2 only, so the fallback price does not apply.
+**Założenie.** Przejście awaryjne z Universal-3.5 Pro do Universal-2 jest rozliczane według stawki Universal-2. Cennik podaje stawkę dla modelu. Nie znalazłem zdania mówiącego, że koszt fallbacku jest naliczany na podstawie `speech_model_used`. Żądanie w tym projekcie ustawia `speech_models` wyłącznie na Universal-2, więc cena fallbacku nie ma zastosowania.
 
-### AssemblyAI storage
+### Przechowywanie danych w AssemblyAI
 
-**Fact.** The default endpoint processes audio in the United States. `api.eu.assemblyai.com` processes and stores audio and transcript data in the EU (Frankfurt, Stockholm, or Ireland). Account data and usage data stay in the United States. File names may be processed by CrowdStrike and Datadog in the United States. Support staff outside the EU may open the audio, and may use a US subprocessor to do it. Source: [Cloud endpoints and data residency](https://www.assemblyai.com/docs/pre-recorded-audio/select-the-region).
+**Fakt.** Domyślny endpoint przetwarza audio w Stanach Zjednoczonych. `api.eu.assemblyai.com` przetwarza i przechowuje audio oraz dane transkrypcji w UE (Frankfurt, Sztokholm lub Irlandia). Dane konta i dane dotyczące użycia pozostają w Stanach Zjednoczonych. Nazwy plików mogą być przetwarzane przez CrowdStrike i Datadog w Stanach Zjednoczonych. Personel wsparcia spoza UE może otworzyć audio i może użyć do tego subprocessora z USA. Źródło: [Cloud endpoints and data residency](https://www.assemblyai.com/docs/pre-recorded-audio/select-the-region).
 
-**Fact.** For pre-recorded transcription, with no custom time-to-live and no business-associate agreement: deletion of an uploaded audio file starts at 24 hours and is at most 48 hours. The finished transcript is deleted after 30 days. A time-to-live can be set down to one hour. That hour is when deletion starts in AWS. AssemblyAI says the bytes can take hours, and they have seen lags of a few days. A transcript can also be deleted by API. Zero retention of audio and transcript is described for streaming, sync speech-to-text, and dictation, not for this file-upload path. Some metadata stays for logs and billing. Source: [Data retention and model training](https://www.assemblyai.com/docs/data-retention-and-model-training).
+**Fakt.** W przypadku transkrypcji nagrania, bez własnego time-to-live i bez business-associate agreement: usuwanie przesłanego pliku audio zaczyna się po 24 godzinach i następuje najpóźniej po 48 godzinach. Gotowa transkrypcja jest usuwana po 30 dniach. Time-to-live można ustawić na zaledwie jedną godzinę. Ta godzina oznacza moment rozpoczęcia usuwania w AWS. AssemblyAI informuje, że usunięcie bajtów może trwać kilka godzin, a opóźnienia sięgały kilku dni. Transkrypcję można również usunąć przez API. Zero retention audio i transkrypcji opisano dla streamingu, synchronicznego speech-to-text i dyktowania, a nie dla ścieżki przesyłania pliku. Część metadanych pozostaje w logach i danych rozliczeniowych. Źródło: [Data retention and model training](https://www.assemblyai.com/docs/data-retention-and-model-training).
 
-**Fact.** The data-processing addendum effective 22 January 2026 says the customer acknowledges that AssemblyAI's primary processing is in the United States and that a transfer to the United States is necessary to provide the service. Transfers rely on the EU-US Data Privacy Framework where the recipient is certified, or on the EU standard contractual clauses. AssemblyAI's own FAQ says they are certified under the framework. Source: [Data processing addendum](https://www.assemblyai.com/legal/data-processing-addendum), [FAQ](https://www.assemblyai.com/docs/faq/has-assemblyai-certified-to-the-eu-us-data-privacy-framework).
+**Fakt.** Addendum dotyczący przetwarzania danych, obowiązujący od 22 stycznia 2026 roku, mówi, że klient przyjmuje do wiadomości, iż podstawowe przetwarzanie AssemblyAI odbywa się w Stanach Zjednoczonych oraz że transfer do Stanów Zjednoczonych jest konieczny do świadczenia usługi. Transfery opierają się na EU-US Data Privacy Framework, jeśli odbiorca posiada certyfikację, albo na standardowych klauzulach umownych UE. Własne FAQ AssemblyAI mówi, że firma posiada certyfikację w ramach tego systemu. Źródła: [Data processing addendum](https://www.assemblyai.com/legal/data-processing-addendum), [FAQ](https://www.assemblyai.com/docs/faq/has-assemblyai-certified-to-the-eu-us-data-privacy-framework).
 
-**Fact.** The EU-US Data Privacy Framework adequacy decision is the Commission's decision of 10 July 2023. The General Court dismissed the challenge on 3 September 2025 (T-553/23). An appeal, C-703/25 P, was filed on 31 October 2025 and was still pending at the end of October 2026, with no judgment found. Sources: [General Court press release](https://curia.europa.eu/site/upload/docs/application/pdf/2025-09/cp250106en.pdf), [notice of appeal](https://eur-lex.europa.eu/eli/C/2025/6610/oj/eng).
+**Fakt.** Decyzja Komisji o adekwatności EU-US Data Privacy Framework pochodzi z 10 lipca 2023 roku. Sąd Generalny oddalił skargę 3 września 2025 roku (T-553/23). Odwołanie, C-703/25 P, wniesiono 31 października 2025 roku i pod koniec października 2026 roku nadal oczekiwało na rozstrzygnięcie; nie znaleziono wyroku. Źródła: [General Court press release](https://curia.europa.eu/site/upload/docs/application/pdf/2025-09/cp250106en.pdf), [notice of appeal](https://eur-lex.europa.eu/eli/C/2025/6610/oj/eng).
 
-**Fact.** AssemblyAI does not use submitted files for model training when the account uses the European servers, has a business-associate agreement, or has opted out. I am opting out. I did not use training as a reason to prefer one vendor. The comparison below is about where the copy sits and how long it sits. Source: [Data retention and model training](https://www.assemblyai.com/docs/data-retention-and-model-training).
+**Fakt.** AssemblyAI nie wykorzystuje przesłanych plików do trenowania modeli, gdy konto korzysta z serwerów europejskich, ma business-associate agreement albo zrezygnowało z takiego użycia. Rezygnuję z niego. Nie użyłem trenowania jako powodu, by preferować jednego dostawcę. Poniższe porównanie dotyczy tego, gdzie znajduje się kopia i jak długo tam pozostaje. Źródło: [Data retention and model training](https://www.assemblyai.com/docs/data-retention-and-model-training).
 
 ### ElevenLabs Scribe v2
 
-**Fact.** Scribe v2 is $0.22 per hour on the API rate card. Keyterm prompting is $0.05 per hour. Transcript editing is $0.07 per hour. The rate card has no separate line for diarization. The product description includes speaker diarization for up to 32 speakers. A marketing sentence on the speech-to-text page says Scribe starts from $0.40 per hour. That conflicts with the API rate card and with the FAQ on the pricing page, which both say $0.22. I used $0.22. The realtime model is $0.39 per hour and is not needed, because the file exists only after the meeting. A Pro subscription at $99 a month includes 450 hours, which is more than 300 hours times $0.22. Sources: [API pricing](https://elevenlabs.io/pricing/api), [Speech to text](https://elevenlabs.io/docs/overview/capabilities/speech-to-text).
+**Fakt.** Scribe v2 kosztuje $0.22 za godzinę według cennika API. Keyterm prompting kosztuje $0.05 za godzinę. Edycja transkrypcji kosztuje $0.07 za godzinę. Cennik nie ma osobnej pozycji za diarizację. Opis produktu obejmuje diarizację mówców dla maksymalnie 32 mówców. Zdanie marketingowe na stronie speech-to-text mówi, że Scribe zaczyna się od $0.40 za godzinę. Jest to sprzeczne z cennikiem API i FAQ na stronie cenowej, które oba podają $0.22. Użyłem $0.22. Model realtime kosztuje $0.39 za godzinę i nie jest potrzebny, ponieważ plik istnieje dopiero po spotkaniu. Subskrypcja Pro za $99 miesięcznie obejmuje 450 godzin, czyli więcej niż 300 godzin pomnożone przez $0.22. Źródła: [API pricing](https://elevenlabs.io/pricing/api), [Speech to text](https://elevenlabs.io/docs/overview/capabilities/speech-to-text).
 
-| What is on                                        | Rate    | 300 hours |
-| ------------------------------------------------- | ------- | --------- |
-| Scribe v2, diarization included in the $0.22 rate | $0.22/h | $66       |
-| Scribe v2 + keyterms                              | $0.27/h | $81       |
+| Co obejmuje                                      | Stawka  | 300 godzin |
+| ------------------------------------------------ | ------- | ---------- |
+| Scribe v2, diarizacja w cenie $0.22              | $0.22/h | $66        |
+| Scribe v2 + keyterms                             | $0.27/h | $81        |
 
-**Fact.** Scribe v2 lists Polish (`pol`) in the group "excellent", word error rate at or below 5%, the same group as English. ElevenLabs does not publish a separate Polish figure for v2. The Polish product page's table gives Scribe v1, not v2, a FLEURS score of 2.3% WER. I did not use 2.3% as a v2 result. Sources: [Speech to text](https://elevenlabs.io/docs/overview/capabilities/speech-to-text), [Polish speech to text](https://elevenlabs.io/speech-to-text/polish).
+**Fakt.** Scribe v2 umieszcza polski (`pol`) w grupie „excellent”, z word error rate nie większym niż 5%, w tej samej grupie co angielski. ElevenLabs nie publikuje osobnego wyniku dla języka polskiego dla v2. Tabela na polskiej stronie produktu podaje wynik FLEURS 2.3% WER dla Scribe v1, a nie v2. Nie użyłem 2.3% jako wyniku v2. Źródła: [Speech to text](https://elevenlabs.io/docs/overview/capabilities/speech-to-text), [Polish speech to text](https://elevenlabs.io/speech-to-text/polish).
 
-**Fact.** Scribe v2 can take one file that contains more than one language and detect the languages without a manual split. Keyterms on the batch model go up to 1000 terms. Sources: [Introducing Scribe v2](https://elevenlabs.io/blog/introducing-scribe-v2), [Speech to text](https://elevenlabs.io/docs/overview/capabilities/speech-to-text).
+**Fakt.** Scribe v2 może przyjąć jeden plik zawierający więcej niż jeden język i wykrywać języki bez ręcznego podziału. Keyterms w modelu batch obejmują maksymalnie 1000 terminów. Źródła: [Introducing Scribe v2](https://elevenlabs.io/blog/introducing-scribe-v2), [Speech to text](https://elevenlabs.io/docs/overview/capabilities/speech-to-text).
 
-**Fact.** On a normal API account, customer data is stored in the United States. EU data residency is an Enterprise feature, on a separate workspace and a separate API host (`api.eu.residency.elevenlabs.io`). Residency limits where data is stored. Processing can still happen outside that region, including for support and moderation. Restricting processing to the EU also requires Zero Retention Mode. Zero Retention Mode is for selected Enterprise customers, is set per request with `enable_logging=false`, and covers speech-to-text audio and text. It does not cover the web UI. By default, speech-to-text history is on for the audio and the text. The docs do not give a number of days for that history on an active account. Deleting through the API removes the audio and the text from the database. Debugging and moderation logs may remain, and backups are kept for up to 30 days. The data-processing addendum says that for self-serve accounts ElevenLabs may delete content after 180 days of inactivity, and does not have to. Sources: [Data residency](https://elevenlabs.io/docs/overview/administration/data-residency), [Zero Retention Mode](https://elevenlabs.io/docs/eleven-api/resources/zero-retention-mode), [DPA](https://elevenlabs.io/dpa).
+**Fakt.** Na zwykłym koncie API dane klienta są przechowywane w Stanach Zjednoczonych. Rezydencja danych w UE jest funkcją Enterprise, w osobnym workspace i przez osobny host API (`api.eu.residency.elevenlabs.io`). Rezydencja ogranicza miejsce przechowywania danych. Przetwarzanie nadal może odbywać się poza tym regionem, w tym na potrzeby wsparcia i moderacji. Ograniczenie przetwarzania do UE wymaga również Zero Retention Mode. Zero Retention Mode jest dostępny dla wybranych klientów Enterprise, jest ustawiany dla każdego żądania przez `enable_logging=false` i obejmuje audio oraz tekst speech-to-text. Nie obejmuje web UI. Domyślnie historia speech-to-text jest włączona dla audio i tekstu. Dokumentacja nie podaje liczby dni przechowywania tej historii na aktywnym koncie. Usunięcie przez API usuwa audio i tekst z bazy danych. Logi debugowania i moderacji mogą pozostać, a kopie zapasowe są przechowywane do 30 dni. Addendum dotyczące przetwarzania danych mówi, że w przypadku kont self-serve ElevenLabs może usunąć treści po 180 dniach bezczynności, ale nie musi tego zrobić. Źródła: [Data residency](https://elevenlabs.io/docs/overview/administration/data-residency), [Zero Retention Mode](https://elevenlabs.io/docs/eleven-api/resources/zero-retention-mode), [DPA](https://elevenlabs.io/dpa).
 
-### What the published Polish numbers do not say
+### Czego nie mówią opublikowane polskie wyniki
 
-**Fact.** FLEURS is read speech. A Meet recording is conversational, overlapping, and one mixed track. Neither vendor publishes a Polish speaker-error rate on meeting audio. A third-party FLEURS bench from July 2026 that includes Scribe v2 does not include Polish and does not include Universal-2. Its author uses Scribe and says so. Source: [koedesk STT Bench](https://koedesk.app/pl/benchmark/).
+**Fakt.** FLEURS jest mową czytaną. Nagranie z Meet jest rozmową, z nakładającymi się wypowiedziami i jedną zmiksowaną ścieżką. Żaden z dostawców nie publikuje wskaźnika błędów mówców dla języka polskiego na audio ze spotkań. Zewnętrzny benchmark FLEURS z lipca 2026 roku, obejmujący Scribe v2, nie zawiera języka polskiego ani Universal-2. Jego autor korzysta z Scribe i wyraźnie to zaznacza. Źródło: [koedesk STT Bench](https://koedesk.app/pl/benchmark/).
 
-**Assumption.** The gap between "at or below 5%" and a published 6.63% on read speech does not predict which model will separate speakers on a Vinseo meeting. That is what the sample recording is for.
+**Założenie.** Różnica między „at or below 5%” a opublikowanym wynikiem 6.63% dla mowy czytanej nie przewiduje, który model lepiej rozdzieli mówców na spotkaniu Vinseo. Temu służy nagranie próbne.
 
-### Options I did not take into the final pair
+### Opcje, których nie włączyłem do końcowej pary
 
-**Fact.** OpenAI `gpt-4o-transcribe-diarize` is about $0.006 per minute, about $108 for 300 hours, and is scheduled to shut down on 26 February 2027. The replacement named for new transcription jobs does not cover speaker labels. Source: [OpenAI transcription guide](https://developers.openai.com/api/docs/guides/transcription), [pricing](https://developers.openai.com/api/docs/pricing).
+**Fakt.** OpenAI `gpt-4o-transcribe-diarize` kosztuje około $0.006 za minutę, czyli około $108 za 300 godzin, i ma zostać wyłączony 26 lutego 2027 roku. Wskazany zamiennik dla nowych zadań transkrypcji nie obsługuje etykiet mówców. Źródło: [OpenAI transcription guide](https://developers.openai.com/api/docs/guides/transcription), [pricing](https://developers.openai.com/api/docs/pricing).
 
-**Fact.** `faster-whisper` and the Whisper weights allow commercial use (MIT). pyannote's code is MIT, and the Community-1 weights are CC-BY-4.0, so commercial use is allowed with attribution. A self-hosted stack can keep the audio on a machine the company controls. The cost is GPU time and someone to run it. I did not measure throughput, so I did not put a dollar figure on it. Source: [pyannote on self-hosting cost](https://www.pyannote.ai/blog/build-vs.-buy-the-real-cost-of-self-hosting-diarization), August 2026.
+**Fakt.** `faster-whisper` i wagi Whisper pozwalają na użycie komercyjne (MIT). Kod pyannote jest objęty MIT, a wagi Community-1 są objęte CC-BY-4.0, więc użycie komercyjne jest dozwolone z podaniem autorstwa. Stos samodzielnie hostowany może utrzymać audio na maszynie kontrolowanej przez firmę. Kosztem jest czas GPU i osoba odpowiedzialna za uruchamianie rozwiązania. Nie mierzyłem przepustowości, więc nie podałem kwoty w dolarach. Źródło: [pyannote on self-hosting cost](https://www.pyannote.ai/blog/build-vs.-buy-the-real-cost-of-self-hosting-diarization), sierpień 2026.
 
-## 3. How I chose
+## 3. Jak dokonałem wyboru
 
-I compared hosted models that can take one file and return text plus speaker labels, because that is what the mixed MP4 can support. The pair I finished with was Universal-2 and Scribe v2. Self-hosted Whisper plus pyannote stayed as the option if audio is not allowed to leave, or if the sample shows that neither hosted model can separate the speakers. OpenAI's diarization model dropped out on the shutdown date. Universal-3.5 Pro dropped out because it does not speak Polish.
+Porównałem hostowane modele, które mogą przyjąć jeden plik i zwrócić tekst wraz z etykietami mówców, ponieważ właśnie to może obsłużyć zmiksowany plik MP4. Końcowa para to Universal-2 i Scribe v2. Samodzielnie hostowane Whisper wraz z pyannote pozostało opcją na wypadek, gdyby audio nie mogło opuszczać firmy albo gdyby próbka pokazała, że żaden hostowany model nie potrafi rozdzielić mówców. Model diarizacji OpenAI odpadł ze względu na datę wyłączenia. Universal-3.5 Pro odpadł, ponieważ nie obsługuje języka polskiego.
 
-I did not pick AssemblyAI because the request is simpler. Scribe is one call: the file, `scribe_v2`, and `diarize=true`. Universal-2 has to be pinned, punctuation has to be on before speaker labels work, and the language pair must not be combined with automatic language detection. For a 45-minute file both sides should return the result by webhook or polling, so the pipeline shape is the same. Ease of configuration was not the reason.
+Nie wybrałem AssemblyAI dlatego, że żądanie jest prostsze. Scribe to jedno żądanie: plik, `scribe_v2` i `diarize=true`. Universal-2 trzeba przypiąć, przed działaniem etykiet mówców trzeba włączyć interpunkcję, a pary języków nie można łączyć z automatycznym wykrywaniem języka. Dla pliku 45-minutowego obie strony powinny zwrócić wynik przez webhook albo polling, więc kształt pipeline'u jest taki sam. Łatwość konfiguracji nie była powodem wyboru.
 
-I also did not pick AssemblyAI because of a proven gap in Polish accuracy. Scribe's published band for Polish is tighter. Universal-2 is the only one of the two that prints a Polish number, and that number is on read speech. I treated those bands as a reason to test, not as a result.
+Nie wybrałem też AssemblyAI z powodu potwierdzonej różnicy w dokładności języka polskiego. Opublikowany przedział dla języka polskiego w Scribe jest węższy. Universal-2 jest jedynym z tych dwóch modeli, dla którego podano polską liczbę, a ta liczba dotyczy mowy czytanej. Potraktowałem te przedziały jako powód do testu, a nie jako wynik.
 
-The reason I did pick AssemblyAI is the copy on a normal API key. Universal-2 can be pointed at an EU host without a sales contract, and the uploaded audio is on a clock of about a day, the transcript on a clock of at most 30 days, shorter if a time-to-live is set. Scribe on a normal key keeps history in the United States until someone deletes it, and the EU-and-delete-immediately setup is Enterprise, with no public price. Fifteen dollars a month is the gap between $51 and $66. That is what the EU host and the deletion clock cost at this volume. With keyterms the gap is the same fifteen dollars, $66 against $81.
+Powodem wyboru AssemblyAI jest kopia danych przy zwykłym kluczu API. Universal-2 można skierować do hosta EU bez umowy sprzedażowej, a przesłane audio jest przechowywane przez około dobę, zaś transkrypcja najwyżej 30 dni, krócej po ustawieniu time-to-live. Scribe przy zwykłym kluczu przechowuje historię w Stanach Zjednoczonych do czasu jej usunięcia, a konfiguracja EU z natychmiastowym usuwaniem jest funkcją Enterprise, bez publicznej ceny. Piętnaście dolarów miesięcznie to różnica między $51 a $66. W tym wolumenie właśnie tyle kosztują host EU i zegar usuwania. Przy keyterms różnica nadal wynosi piętnaście dolarów: $66 wobec $81.
 
-I refused one argument along the way. The first comparison treated "they may train on the audio" as a point for AssemblyAI. I will turn training off, so that point does not decide anything. The comparison had to be redone on place and retention only.
+Po drodze odrzuciłem jeden argument. Pierwsze porównanie traktowało „mogą trenować na audio” jako punkt na korzyść AssemblyAI. Wyłączę trenowanie, więc ten punkt nie rozstrzyga. Porównanie trzeba było powtórzyć wyłącznie pod kątem miejsca i czasu przechowywania.
 
-I also refused the EU endpoint as a legal result. Storing the working copy in the EU means that copy is not, by itself, a transfer to the United States, so it does not depend on the adequacy decision staying valid. It does not mean the recording stays in the EEA. Account data is in the US, support can open the file from outside the EU, and the addendum says a transfer to the US is part of the service. Remote access from a third country to data stored in the EEA is still a transfer under the European Data Protection Board's guidelines 05/2021. I can describe that in the document. I cannot sign it off. That is the specialist's question in section 8.
+Odrzuciłem również endpoint EU jako wynik prawny. Przechowywanie kopii roboczej w UE oznacza, że sama ta kopia nie jest transferem do Stanów Zjednoczonych, więc nie zależy od utrzymania ważności decyzji o adekwatności. Nie oznacza to, że nagranie pozostaje w EOG. Dane konta są w USA, wsparcie może otworzyć plik spoza UE, a addendum mówi, że transfer do USA jest częścią usługi. Zdalny dostęp z państwa trzeciego do danych przechowywanych w EOG nadal jest transferem według wytycznych Europejskiej Rady Ochrony Danych 05/2021. Mogę opisać to w dokumencie. Nie mogę zatwierdzić tego prawnie. To pytanie do specjalisty w sekcji 8.
 
-## 4. What the choice commits to
+## 4. Do czego zobowiązuje ten wybór
 
-For the document and for a later real client, the intended request is:
+Na potrzeby dokumentu i późniejszego prawdziwego klienta zamierzone żądanie wygląda tak:
 
 - Host `https://api.eu.assemblyai.com`.
-- `speech_models`: `["universal-2"]` only, so a default change cannot send Polish to Universal-3.5 Pro.
-- `language_codes`: `["en", "pl"]`. Do not also set `language_detection`.
-- `speaker_labels: true` and `punctuate: true`.
-- A speaker range, not an exact count. The assignment says 2–6 participants, and an exact wrong count hurts diarization.
-- Keyterms only if the sample shows English campaign names being rewritten as Polish. That adds $0.05 per hour, $15 a month at 300 hours.
-- The shortest time-to-live the account allows, and a delete call after the segments are stored on our side.
-- Training opted out, as a switch I set, not as the reason for the vendor.
+- Wyłącznie `speech_models`: `["universal-2"]`, aby zmiana wartości domyślnej nie wysłała języka polskiego do Universal-3.5 Pro.
+- `language_codes`: `["en", "pl"]`. Nie ustawiaj jednocześnie `language_detection`.
+- `speaker_labels: true` i `punctuate: true`.
+- Zakres liczby mówców, nie dokładna liczba. Zadanie mówi o 2–6 uczestnikach, a dokładna błędna liczba pogarsza diarizację.
+- Keyterms tylko wtedy, gdy próbka pokaże, że angielskie nazwy kampanii są przepisywane jako polskie. Dodaje to $0.05 za godzinę, czyli $15 miesięcznie przy 300 godzinach.
+- Najkrótszy time-to-live dozwolony przez konto oraz żądanie usunięcia po zapisaniu segmentów po naszej stronie.
+- Rezygnacja z trenowania ustawiona jako przełącznik, a nie jako powód wyboru dostawcy.
 
-**Assumption.** The bytes that leave are an audio extract of the MP4, not the video. The Meet file contains faces. The transcriber needs the sound. I did not make this a separate decision in the chat. It follows from sending the recording to an outside service.
+**Założenie.** Wysyłane bajty to wyodrębnione audio z MP4, a nie wideo. Plik z Meet zawiera twarze. Transkrybent potrzebuje dźwięku. Nie uczyniłem z tego osobnej decyzji w rozmowie. Wynika to z wysłania nagrania do zewnętrznej usługi.
 
-The code in the assignment can keep this client behind a stub. The assignment does not require a live vendor. The choice is for the document. The stub should still return segments shaped the way this API does: start, end, text, and a speaker label local to the file.
+Kod zadania może trzymać tego klienta za stubem. Zadanie nie wymaga działającego dostawcy. Wybór jest potrzebny do dokumentu. Stub powinien jednak zwracać segmenty w kształcie używanym przez to API: start, end, text i etykietę mówcy lokalną dla pliku.
 
-## 5. What would change the choice
+## 5. Co zmieniłoby ten wybór
 
-- The specialist says the EU endpoint does not change the transfer, and ElevenLabs Enterprise with EU residency and Zero Retention Mode is the configuration that actually matches the constraint. Then I ask for that price and compare it with $51. If Enterprise is unavailable, self-hosting is the remaining way to keep the audio in the company.
-- One Polish file with `speaker_labels` is rejected. Universal-2 then fails the requirement, not just the benchmark.
-- The sample recording is clearly better on Scribe, on the words and on the speaker breaks. Then I either accept a US copy with manual deletion, or I pay for Enterprise, or I stay with Universal-2 and write down the quality I am giving up.
-- Both models fail the sample in the same way: one speaker split into two, two people glued together, English names lost. Then diarization of the mixed file is the wrong tool for this audio, and I reopen self-hosting only if there is a reason to think a different model would do better. A different capture path is a change to `notes/transcription-workflow-recap.md`, not a parameter on this request.
-- Google adds Polish to saved Meet transcripts. Those entries already carry the Meet participant. They would replace diarization for meetings where transcription was turned on. That condition is already in the workflow record.
+- Specjalista powie, że endpoint EU nie zmienia transferu, a ElevenLabs Enterprise z EU residency i Zero Retention Mode jest konfiguracją, która rzeczywiście spełnia ograniczenie. Wtedy poproszę o tę cenę i porównam ją z $51. Jeśli Enterprise jest niedostępne, self-hosting pozostaje sposobem na utrzymanie audio w firmie.
+- Jeden polski plik z `speaker_labels` zostanie odrzucony. Wtedy Universal-2 nie spełnia wymagania, a nie tylko przegrywa benchmark.
+- Nagranie próbne okaże się wyraźnie lepsze w Scribe, zarówno pod względem słów, jak i przerw między mówcami. Wtedy albo zaakceptuję kopię w USA z ręcznym usunięciem, albo zapłacę za Enterprise, albo pozostanę przy Universal-2 i zapiszę, z jakiej jakości rezygnuję.
+- Oba modele zawiodą na próbce w ten sam sposób: jeden mówca zostanie podzielony na dwóch, dwie osoby zostaną sklejone, a angielskie nazwy znikną. Wtedy diarizacja zmiksowanego pliku jest niewłaściwym narzędziem dla tego audio, a do self-hostingu wrócę tylko wtedy, gdy będzie powód sądzić, że inny model poradzi sobie lepiej. Inna ścieżka przechwytywania to zmiana w `notes/transcription-workflow-recap.md`, a nie parametr tego żądania.
+- Google doda język polski do zapisanych transkrypcji Meet. Te wpisy już zawierają uczestnika Meet. Zastąpiłyby diarizację dla spotkań, na których włączono transkrypcję. Ten warunek jest już zapisany w dokumencie workflow.
 
-## 6. How AI was used
+## 6. Jak użyto AI
 
-AI (Cursor, in this chat) gathered vendor docs, prices, and the legal terms, and compared Universal-2 with Scribe v2. I asked for sources when a claim was a summary. I dropped the training argument. I did not accept "AssemblyAI is better" until the difference was stated as a concrete copy: where it sits, and when it is deleted. The choice in section 1 is mine, including the two checks. The model's recommendation was AssemblyAI. I kept it, and I made the two flip conditions part of the decision instead of footnotes.
+AI (Cursor, w tej rozmowie) zebrało dokumentację dostawców, ceny i warunki prawne oraz porównało Universal-2 z Scribe v2. Prosiłem o źródła, gdy twierdzenie było podsumowaniem. Odrzuciłem argument dotyczący trenowania. Nie zaakceptowałem stwierdzenia „AssemblyAI jest lepsze”, dopóki różnica nie została przedstawiona jako konkretna kopia: gdzie się znajduje i kiedy jest usuwana. Wybór w sekcji 1 należy do mnie, łącznie z dwiema kontrolami. Rekomendacją modelu było AssemblyAI. Zachowałem ją i uczyniłem oba warunki zmiany częścią decyzji, a nie przypisami.
 
-### What I asked the model to do
+### Co zleciłem modelowi
 
-- Options for speech recognition, starting from ElevenLabs, including a path with no external API.
-- The Universal-3.5 Pro language list, with a source. Whether Universal-2 and Universal-3.5 Pro support diarization. Whether the storage and legal terms actually differ. The cost of both AssemblyAI models with diarization.
-- The legal difference again, with training left out, and then what EU storage changes in law.
-- A direct cost comparison of Scribe v2 and Universal-2.
-- Which model handles Polish better.
-- Which API is easier to configure.
-- A final comparison so I could decide.
+- Opcje rozpoznawania mowy, zaczynając od ElevenLabs, w tym ścieżkę bez zewnętrznego API.
+- Listę języków Universal-3.5 Pro wraz ze źródłem. Czy Universal-2 i Universal-3.5 Pro obsługują diarizację. Czy warunki przechowywania i prawne rzeczywiście się różnią. Koszt obu modeli AssemblyAI z diarizacją.
+- Ponowne sprawdzenie różnicy prawnej, z pominięciem trenowania, a następnie tego, co przechowywanie w UE zmienia w prawie.
+- Bezpośrednie porównanie kosztów Scribe v2 i Universal-2.
+- Który model lepiej obsługuje język polski.
+- Które API łatwiej skonfigurować.
+- Końcowe porównanie, żebym mógł podjąć decyzję.
 
-### What I verified, because the first answer was not enough
+### Co zweryfikowałem, ponieważ pierwsza odpowiedź nie wystarczyła
 
-- The 18 languages. I asked for the list and the source. The code-switching page names them. The realtime page gives the codes. Polish is absent. The first pass had said Universal-3.5 Pro might not include Polish. The list is the fact.
-- Diarization. The pricing page, updated 2026-10-27, prices it on both Universal-2 and Universal-3.5 Pro. There is still no language-by-feature cell for Polish. That remains a test, not a fact.
-- The EU endpoint. I did not take "data stays in the EU" as the end of the question. The residency page itself lists US account data, US subprocessors for file names, and support access from outside the region. The addendum says primary processing is in the United States.
-- Scribe's Polish score. The 2.3% FLEURS figure is labeled Scribe v1 on the product page. v2 only has the band "at or below 5%".
-- The $0.40 marketing line. The API rate card and the pricing FAQ say $0.22. I used the rate card.
+- 18 języków. Poprosiłem o listę i źródło. Strona code-switching je wymienia. Strona realtime podaje kody. Polskiego na niej nie ma. Pierwsza wersja mówiła, że Universal-3.5 Pro może nie obejmować języka polskiego. Lista jest faktem.
+- Diarizację. Cennik, zaktualizowany 2026-10-27, wycenia ją dla Universal-2 i Universal-3.5 Pro. Nadal nie ma komórki język–funkcja dla języka polskiego. To pozostaje testem, a nie faktem.
+- Endpoint EU. Nie uznałem „dane pozostają w UE” za koniec pytania. Sama strona dotycząca rezydencji wymienia dane konta w USA, subprocessory z USA dla nazw plików oraz dostęp wsparcia spoza regionu. Addendum mówi, że podstawowe przetwarzanie odbywa się w Stanach Zjednoczonych.
+- Wynik Scribe dla języka polskiego. Wartość 2.3% FLEURS na stronie produktu jest oznaczona jako wynik Scribe v1. v2 ma tylko przedział „at or below 5%”.
+- Marketingową wartość $0.40. Cennik API i FAQ dotyczące cen podają $0.22. Użyłem cennika.
 
-### What I changed relative to the model's drafts
+### Co zmieniłem względem wersji roboczych modelu
 
-- Training on customer audio is not a reason for the choice. I will turn it off. The model had been using it as a point for AssemblyAI. I had that comparison redone.
-- "Stored in the EU" is not a legal conclusion. The model explained the transfer rules and then, when I said I still did not see the advantage, stated it as the ordinary copy: EU and about a day, against US history until deleted. I kept that sentence and left the legal sign-off to a specialist.
-- The recommendation was conditional on a sample and on a failed diarization check. I made both conditions explicit, and I added the specialist, before calling the choice final.
+- Trenowanie na audio klienta nie jest powodem wyboru. Wyłączę je. Model używał tego jako argumentu na rzecz AssemblyAI. Zleciłem ponowne porównanie.
+- „Przechowywane w UE” nie jest wnioskiem prawnym. Model wyjaśnił zasady transferu, a gdy powiedziałem, że nadal nie widzę przewagi, ujął ją jako zwykłą kopię: UE i około doby wobec historii w USA do czasu usunięcia. Zachowałem to zdanie, a zatwierdzenie prawne pozostawiłem specjaliście.
+- Rekomendacja była warunkowa: zależała od próbki i od nieudanego testu diarizacji. Uczyniłem oba warunki jawnymi i dodałem specjalistę, zanim nazwałem wybór ostatecznym.
 
-### Example prompts from this chat
+### Przykładowe prompty z tej rozmowy
 
-A demand for sources, not a summary:
+Żądanie źródeł, a nie podsumowania:
 
 > Podaj listę języków jaką obsługuje assembly universal 3.5 pro, podaj źródło. Sprawdź czy modele universal-2 i universal-3.5 pro obsługują diaryzację. Sprawdź czy faktycznie jest różnica pomiędzy assemblyai i elevenlabs w kontekście przechowywania danych i innych sprawach prawnych.
 
-Training set aside:
+Odrzucenie argumentu o trenowaniu:
 
 > Nie podnoś argumentu o używania nagrań do treningów, po prostu to wyłączę.
 
-The decision, with the two checks:
+Decyzja z dwiema kontrolami:
 
 > Ostatecznie wybieram assemblyAi z ważnym zastrzeżeniem - musiałbym poprosić o wyjaśnienie kwestii przechowywania danych elevenlabs vs assemblyai specjalistę. Oprócz tego potrzebowałbym jakiegoś przykładowego nagrania rozmowy, żeby móc przetestować, który model poradzi sobie z nim najlepiej i czy w ogóle jakiś sobie poradzi, czy trzeba inaczej podejść do rozwiązania tego problemu.
 
-## 7. Part A, question 4: transcription and speaker recognition
+## 7. Part A, pytanie 4: transkrypcja i rozpoznawanie mówców
 
-This is the part that belongs in the decision document. The summary model is not answered here.
+To jest część, która należy do dokumentu decyzyjnego. Model podsumowujący nie jest tu wybierany.
 
-**Model.** AssemblyAI Universal-2, speech to text and speaker diarization in one request. Universal-3.5 Pro is the vendor's newer model and does not support Polish, so the request names Universal-2 and does not rely on the default fallback.
+**Model.** AssemblyAI Universal-2, speech to text i diarizacja mówców w jednym żądaniu. Universal-3.5 Pro jest nowszym modelem dostawcy i nie obsługuje języka polskiego, dlatego żądanie wskazuje Universal-2 i nie polega na domyślnym fallbacku.
 
-**Speaker recognition.** The Meet file is one mixed recording. The model labels stretches of audio as speaker A, B, C. Those labels are local to the file. They are not Google accounts. People on the meeting map a label to a participant afterwards, as in the workflow record. Meet cannot supply this split for Polish. Its saved transcripts do not include Polish.
+**Rozpoznawanie mówców.** Plik z Meet jest jednym zmiksowanym nagraniem. Model oznacza fragmenty audio jako speaker A, B, C. Etykiety te są lokalne dla pliku. Nie są kontami Google. Uczestnicy spotkania później mapują etykietę na uczestnika, zgodnie z dokumentem workflow. Meet nie może dostarczyć takiego podziału dla języka polskiego. Jego zapisane transkrypcje nie obejmują języka polskiego.
 
-**Quality for Polish.** Universal-2 is in the vendor's high-accuracy group, at or below 10% word error rate, and the vendor's FLEURS number for Polish is 6.63% (January 2026). English on the same set is 4.38%. FLEURS is read speech, not a meeting. Scribe v2 places Polish in a tighter band, at or below 5%, and does not publish a Polish number for v2. Neither vendor publishes how often the speaker label is wrong on overlapping meeting audio. I will not treat 6.63% as the error rate Vinseo will see. A sample recording decides whether the number is good enough, and whether either hosted model works on this audio.
+**Jakość dla języka polskiego.** Universal-2 znajduje się w grupie wysokiej dokładności dostawcy, z word error rate nie większym niż 10%, a wynik FLEURS dostawcy dla języka polskiego wynosi 6.63% (styczeń 2026). Angielski na tym samym zbiorze osiąga 4.38%. FLEURS to mowa czytana, a nie spotkanie. Scribe v2 umieszcza polski w węższym przedziale, nie większym niż 5%, i nie publikuje wyniku dla języka polskiego dla v2. Żaden dostawca nie publikuje, jak często etykieta mówcy jest błędna przy nakładającym się audio ze spotkania. Nie będę traktować 6.63% jako błędu, którego doświadczy Vinseo. Nagranie próbne rozstrzyga, czy wynik jest wystarczający oraz czy którykolwiek hostowany model działa na tym audio.
 
-**English inside Polish.** Campaign names and jargon are the assignment's case. Universal-2 can be pinned to English and Polish together, which is the maximum its code-switching allows. If the sample rewrites those names, keyterms are the next switch, at $0.05 per hour.
+**Angielski wewnątrz języka polskiego.** Nazwy kampanii i żargon to przypadek opisany w zadaniu. Universal-2 można przypiąć jednocześnie do angielskiego i polskiego, co jest maksimum dozwolonym przez jego code switching. Jeśli próbka przepisuje te nazwy, następnym przełącznikiem są keyterms w cenie $0.05 za godzinę.
 
-**Cost.** At 300 hours, one mono stream, standard diarization: $0.15 + $0.02 = $0.17 per hour, **$51 a month**. Experimental diarization, if the sample needs it, is $0.215 per hour, **$64.50**. Keyterms add $15, to **$66**. Scribe v2 at the API rate of $0.22 is **$66**, or **$81** with keyterms. The EU host does not change AssemblyAI's price. A stereo file billed per channel would double the AssemblyAI figure. The pipeline should send one mono track.
+**Koszt.** Przy 300 godzinach, jednym strumieniu mono i standardowej diarizacji: $0.15 + $0.02 = $0.17 za godzinę, **$51 miesięcznie**. Eksperymentalna diarizacja, jeśli próbka jej wymaga, kosztuje $0.215 za godzinę, **$64.50**. Keyterms dodają $15, do **$66**. Scribe v2 przy stawce API $0.22 kosztuje **$66**, albo **$81** z keyterms. Host EU nie zmienia ceny AssemblyAI. Plik stereo rozliczany za kanał podwoiłby kwotę AssemblyAI. Pipeline powinien wysyłać jedną ścieżkę mono.
 
-**Privacy.** The working copy of the audio and the transcript is processed in the EU when the client uses `api.eu.assemblyai.com`. Uploaded audio starts deletion after 24 hours. The transcript is kept up to 30 days, or less if a time-to-live is set, and it is deleted through the API once the segments are stored on our side. This is not zero retention, and it is not a closed EEA box. Account and billing data stay in the US. Support can open the recording from outside the EU. The addendum says a transfer to the United States is necessary for the service. Training is switched off and is not the basis of the choice. A specialist still has to say whether this is acceptable for client meetings. Until that answer, the document should describe the copy, not call it compliant.
+**Prywatność.** Kopia robocza audio i transkrypcji jest przetwarzana w UE, gdy klient korzysta z `api.eu.assemblyai.com`. Usuwanie przesłanego audio zaczyna się po 24 godzinach. Transkrypcja jest przechowywana do 30 dni albo krócej, jeśli ustawiono time-to-live, i jest usuwana przez API po zapisaniu segmentów po naszej stronie. Nie jest to zero retention ani zamknięta skrzynka EOG. Dane konta i rozliczeń pozostają w USA. Wsparcie może otworzyć nagranie spoza UE. Addendum mówi, że transfer do Stanów Zjednoczonych jest konieczny do świadczenia usługi. Trenowanie jest wyłączone i nie stanowi podstawy wyboru. Specjalista nadal musi powiedzieć, czy jest to akceptowalne dla spotkań z klientami. Do tego czasu dokument powinien opisywać kopię, a nie nazywać rozwiązania zgodnym z prawem.
 
-**Maintenance.** There is no model to host and no GPU to watch. The operational work is pinning the model id, storing the vendor's job id so a retry does not create a second transcript, deleting the vendor's copy after a successful save, and noticing if the price or the language list changes. A vendor outage stops the step. It does not lose the meeting, because the recording id and the last finished step stay in our database. Self-hosting would move that work onto a GPU and onto model updates. I did not choose it for the first version. It remains the option if the audio is not allowed to leave, or if the sample shows the hosted models cannot do the job.
+**Utrzymanie.** Nie ma modelu do hostowania ani GPU do monitorowania. Praca operacyjna polega na przypięciu identyfikatora modelu, zapisaniu identyfikatora zadania dostawcy, aby ponowienie nie utworzyło drugiej transkrypcji, usunięciu kopii u dostawcy po udanym zapisie oraz zauważeniu zmiany ceny albo listy języków. Awaria dostawcy zatrzymuje ten krok. Nie powoduje utraty spotkania, ponieważ identyfikator nagrania i ostatni ukończony krok pozostają w naszej bazie danych. Self-hosting przeniósłby tę pracę na GPU i aktualizacje modeli. Nie wybrałem go dla pierwszej wersji. Pozostaje opcją, jeśli audio nie może opuszczać firmy albo jeśli próbka pokaże, że hostowane modele nie potrafią wykonać zadania.
 
-**What I am not claiming.** That Polish diarization is confirmed. That the recording never leaves the EEA. That 6.63% is the meeting error rate. That Scribe's 2.3% FLEURS score applies to v2. That this paragraph picks the summary model.
+**Czego nie twierdzę.** Że diarizacja języka polskiego jest potwierdzona. Że nagranie nigdy nie opuszcza EOG. Że 6.63% to błąd na spotkaniu. Że wynik Scribe 2.3% FLEURS dotyczy v2. Że ten akapit wybiera model podsumowujący.
 
-## 8. Questions before implementation
+## 8. Pytania przed implementacją
 
-### To a specialist, before the vendor is treated as accepted
+### Do specjalisty, zanim uznamy dostawcę za zaakceptowanego
 
-Please compare the two arrangements below and say which, if either, Vinseo can use for a recording of a client meeting. I need the difference in where the copy is stored and how long it is kept. I will turn off the use of customer audio for model training on whichever vendor we use, so training is not the question.
+Proszę porównać poniższe dwa rozwiązania i powiedzieć, które z nich, jeśli którekolwiek, Vinseo może wykorzystać do nagrania spotkania z klientem. Potrzebuję różnicy w miejscu przechowywania kopii i czasie jej przechowywania. Wyłączę użycie audio klientów do trenowania modeli u wybranego dostawcy, więc trenowanie nie jest przedmiotem pytania.
 
-AssemblyAI, normal API key, EU endpoint:
+AssemblyAI, zwykły klucz API, endpoint EU:
 
-- Audio and transcript are processed in the EU. Account data and usage data stay in the US. File names may go to US subprocessors. Support outside the EU may open the audio.
-- Uploaded audio is deleted starting at 24 hours. The transcript is deleted after 30 days, or sooner with a time-to-live, down to about one hour plus AWS deletion lag. We would also delete by API after we have stored the segments.
-- The addendum says primary processing is in the United States and that a transfer there is necessary. AssemblyAI says it is certified under the EU-US Data Privacy Framework. That decision is in force and under appeal (C-703/25 P).
+- Audio i transkrypcja są przetwarzane w UE. Dane konta i dane dotyczące użycia pozostają w USA. Nazwy plików mogą trafić do subprocessorów w USA. Wsparcie spoza UE może otworzyć audio.
+- Przesłane audio jest usuwane od 24 godzin. Transkrypcja jest usuwana po 30 dniach albo wcześniej przy użyciu time-to-live, nawet po około jednej godzinie plus opóźnienie usuwania AWS. My również usunęlibyśmy ją przez API po zapisaniu segmentów.
+- Addendum mówi, że podstawowe przetwarzanie odbywa się w Stanach Zjednoczonych i że transfer tam jest konieczny. AssemblyAI mówi, że posiada certyfikację w ramach EU-US Data Privacy Framework. Ta decyzja obowiązuje i jest przedmiotem odwołania (C-703/25 P).
 
-ElevenLabs Scribe, normal API key:
+ElevenLabs Scribe, zwykły klucz API:
 
-- The copy is stored in the US. History is on. There is no published deletion period for an active account. An API delete removes the audio and the text. Logs and backups may remain, backups for up to 30 days.
-- EU residency and Zero Retention Mode exist, and both are Enterprise. I do not have a public price.
+- Kopia jest przechowywana w USA. Historia jest włączona. Nie ma opublikowanego okresu usuwania dla aktywnego konta. Usunięcie przez API usuwa audio i tekst. Logi i kopie zapasowe mogą pozostać, a kopie zapasowe do 30 dni.
+- EU residency i Zero Retention Mode istnieją i oba są funkcjami Enterprise. Nie mam publicznej ceny.
 
-What I need back:
+Potrzebuję odpowiedzi na następujące pytania:
 
-- Does the EU endpoint mean the ordinary copy is not a transfer to the US, given that support can open it and the addendum assumes a US transfer?
-- If both vendors are still a transfer, does AssemblyAI's deletion clock change anything Vinseo is allowed to do?
-- If only ElevenLabs Enterprise would be acceptable, I need that said plainly, because it changes the vendor and the cost.
+- Czy endpoint EU oznacza, że zwykła kopia nie jest transferem do USA, skoro wsparcie może ją otworzyć, a addendum zakłada transfer do USA?
+- Jeśli w przypadku obu dostawców nadal występuje transfer, czy zegar usuwania AssemblyAI zmienia coś, co Vinseo może zrobić?
+- Jeśli akceptowalny byłby wyłącznie ElevenLabs Enterprise, potrzebuję jasnego stwierdzenia, ponieważ zmienia to dostawcę i koszt.
 
-### To Vinseo, before any live call
+### Do Vinseo, przed jakąkolwiek rozmową na żywo
 
-- Can you give me, or approve, one sample recording that sounds like your meetings: Polish, English campaign names and jargon, two to six speakers, people talking over each other, one mixed track? It must not be a real client meeting.
-- I will run that file through Universal-2 and through Scribe v2 and compare the words and the speaker breaks. If neither result is usable, I will come back with a different approach rather than tune the request.
-- Is about $51 a month for transcription and diarization, before the summary model, inside the budget you have in mind? Experimental diarization would be about $64.50. Keyterms, if names need them, add about $15.
-- If the sample is clearly better on Scribe, do you accept a copy stored in the US on a normal API key, or do you want the Enterprise configuration priced before I switch?
+- Czy możecie przekazać albo zatwierdzić jedno przykładowe nagranie brzmiące jak wasze spotkania: język polski, angielskie nazwy kampanii i żargon, od dwóch do sześciu mówców, nakładające się wypowiedzi, jedna zmiksowana ścieżka? Nie może to być prawdziwe spotkanie z klientem.
+- Przepuszczę ten plik przez Universal-2 i Scribe v2 oraz porównam słowa i podziały między mówcami. Jeśli żaden wynik nie będzie użyteczny, wrócę z innym podejściem, zamiast dostrajać żądanie.
+- Czy około $51 miesięcznie za transkrypcję i diarizację, przed modelem podsumowującym, mieści się w zakładanym przez was budżecie? Eksperymentalna diarizacja kosztowałaby około $64.50. Keyterms, jeśli będą potrzebne dla nazw, dodają około $15.
+- Jeśli próbka będzie wyraźnie lepsza w Scribe, czy akceptujecie kopię przechowywaną w USA na zwykłym kluczu API, czy chcecie najpierw wycenić konfigurację Enterprise?
 
-### A check I run myself, on a file with no client data
+### Kontrola, którą wykonam samodzielnie, na pliku bez danych klienta
 
-- One short Polish clip, `speaker_labels` on, `speech_models` set to Universal-2, sent to the EU endpoint. If the API returns the `speaker_labels` error from the language page, Universal-2 is out.
+- Jeden krótki polski klip, z włączonym `speaker_labels`, z `speech_models` ustawionym na Universal-2, wysłany do endpointu EU. Jeśli API zwróci błąd `speaker_labels` ze strony języków, Universal-2 odpada.

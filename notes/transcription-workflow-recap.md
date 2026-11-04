@@ -1,447 +1,447 @@
-# Transcription workflow
+# Przebieg transkrypcji
 
-Decision record for how Vinseo's meeting assistant obtains a Google Meet recording, turns it into a Polish transcript with speaker separation, and attaches those speakers to people. Written on 2026-10-30 from research and decisions made before implementation.
+Rejestr decyzji dotyczących tego, jak asystent spotkań Vinseo pozyskuje nagranie Google Meet, przekształca je w polską transkrypcję z rozdzieleniem mówców i przypisuje tych mówców do osób. Dokument sporządzono 2026-10-30 na podstawie badań i decyzji podjętych przed implementacją.
 
-This file is the full record. The Part A document should condense it. The README section on AI usage should follow section 6.
+Ten plik jest pełnym rejestrem. Dokument Part A powinien go skrócić. Sekcja README dotycząca użycia AI powinna być zgodna z sekcją 6.
 
-Claims below are marked **Fact** (checked against a source on the date given) or **Assumption** (not verified, and open to change).
+Poniższe twierdzenia oznaczono jako **Fakt** (sprawdzony względem źródła w podanym dniu) albo **Założenie** (niezweryfikowane i możliwe do zmiany).
 
-## 1. Context and verified facts
+## 1. Kontekst i zweryfikowane fakty
 
-Checked on 2026-10-30.
+Sprawdzone 2026-10-30.
 
-### What the assignment needs
+### Wymagania zadania
 
-**Fact.** The company runs on Google Workspace. After a meeting the tool must produce a Polish transcript with speaker separation, a short summary, and a list of decisions and tasks (who, what, by when). People may ask questions and must get an answer with a source. Access is limited to meetings a person should see. Client data must not leave the company to places it should not. About 40 people, about 25 of whom meet regularly, about 300 hours of meetings a month, usually 45 minutes, 2–6 participants, Polish with English campaign names and jargon, and some participants from outside the company. Source: `docs/zadanie.md`.
+**Fakt.** Firma korzysta z Google Workspace. Po spotkaniu narzędzie musi utworzyć polską transkrypcję z rozdzieleniem mówców, krótkie podsumowanie oraz listę decyzji i zadań (kto, co i do kiedy). Użytkownicy mogą zadawać pytania i muszą otrzymać odpowiedź ze źródłem. Dostęp jest ograniczony do spotkań, które dana osoba powinna widzieć. Dane klienta nie mogą opuszczać firmy i trafiać tam, gdzie nie powinny. Około 40 osób, z czego około 25 spotyka się regularnie, około 300 godzin spotkań miesięcznie, zwykle po 45 minut, 2–6 uczestników, język polski z angielskimi nazwami kampanii i żargonem oraz część uczestników spoza firmy. Źródło: `docs/zadanie.md`.
 
-### Google Meet recordings
+### Nagrania Google Meet
 
-**Fact.** A recording is one MP4 saved to the meeting organizer's Google Drive. The Meet REST API returns metadata, not the file bytes. `driveDestination.file` is the Drive file id. Download is `GET https://www.googleapis.com/drive/v3/files/{fileId}?alt=media`. The recording state moves from `STARTED` to `ENDED` (the call ended, the file is not ready) to `FILE_GENERATED` (ready to download). A user can delete the Drive file while the Meet recording id still exists. Source: [Work with artifacts](https://developers.google.com/workspace/meet/api/guides/artifacts), [conferenceRecords.recordings](https://developers.google.com/workspace/meet/api/reference/rest/v2/conferenceRecords.recordings).
+**Fakt.** Nagranie jest pojedynczym plikiem MP4 zapisanym na Dysku Google organizatora spotkania. Meet REST API zwraca metadane, a nie bajty pliku. `driveDestination.file` to identyfikator pliku na Dysku. Pobieranie odbywa się przez `GET https://www.googleapis.com/drive/v3/files/{fileId}?alt=media`. Stan nagrania przechodzi z `STARTED` do `ENDED` (połączenie się zakończyło, ale plik nie jest gotowy), a następnie do `FILE_GENERATED` (plik jest gotowy do pobrania). Użytkownik może usunąć plik z Dysku, mimo że identyfikator nagrania Meet nadal istnieje. Źródło: [Work with artifacts](https://developers.google.com/workspace/meet/api/guides/artifacts), [conferenceRecords.recordings](https://developers.google.com/workspace/meet/api/reference/rest/v2/conferenceRecords.recordings).
 
-**Fact.** `conferenceRecords.list` returns only conferences where the caller is the meeting organizer, ordered by start time. An app with only the `meetings.space.created` scope sees only spaces that app created. Source: [Work with conferences](https://developers.google.com/workspace/meet/api/guides/conferences).
+**Fakt.** `conferenceRecords.list` zwraca wyłącznie konferencje, których organizatorem jest wywołujący, uporządkowane według czasu rozpoczęcia. Aplikacja mająca tylko zakres `meetings.space.created` widzi wyłącznie przestrzenie utworzone przez tę aplikację. Źródło: [Work with conferences](https://developers.google.com/workspace/meet/api/guides/conferences).
 
-**Fact.** Someone must start recording during the meeting, or the meeting space must have auto-recording configured. Recording is available on Business Standard, Business Plus, Enterprise editions, and several other paid editions. A Workspace admin must allow it. The organizer's Drive and the organization's Drive both need free space. Source: [Record a video meeting](https://support.google.com/meet/answer/9308681).
+**Fakt.** Ktoś musi rozpocząć nagrywanie podczas spotkania albo w jego przestrzeni musi być skonfigurowane automatyczne nagrywanie. Nagrywanie jest dostępne w wersjach Business Standard, Business Plus, Enterprise i kilku innych płatnych wersjach. Administrator Workspace musi je zezwolić. Zarówno Dysk organizatora, jak i Dysk organizacji muszą mieć wolne miejsce. Źródło: [Record a video meeting](https://support.google.com/meet/answer/9308681).
 
-### Google Meet transcripts
+### Transkrypcje Google Meet
 
-**Fact.** Meet can also produce a transcript, independent of the video recording. Structured transcript entries from the REST API include `participant`, `text`, `languageCode`, `startTime`, and `endTime`. Each entry is one participant's speech. Entries are deleted 30 days after the conference ends. A Google Docs file is also saved to the organizer's Drive and follows Drive retention. API entries can differ from the Docs file. Source: [Work with artifacts](https://developers.google.com/workspace/meet/api/guides/artifacts), [transcript entries](https://developers.google.com/workspace/meet/api/reference/rest/v2/conferenceRecords.transcripts.entries).
+**Fakt.** Meet może również utworzyć transkrypcję niezależnie od nagrania wideo. Ustrukturyzowane wpisy transkrypcji z REST API zawierają `participant`, `text`, `languageCode`, `startTime` i `endTime`. Każdy wpis obejmuje wypowiedź jednego uczestnika. Wpisy są usuwane 30 dni po zakończeniu konferencji. Na Dysku organizatora zapisywany jest także plik Google Docs, który podlega zasadom przechowywania Dysku. Wpisy API mogą różnić się od pliku Docs. Źródło: [Work with artifacts](https://developers.google.com/workspace/meet/api/guides/artifacts), [transcript entries](https://developers.google.com/workspace/meet/api/reference/rest/v2/conferenceRecords.transcripts.entries).
 
-**Fact.** Saved Meet transcripts are available in English, French, German, Italian, Japanese, Korean, Portuguese, and Spanish. Polish is not on that list. The same eight languages apply to Gemini "Take notes for me". Live captions do include Polish, but captions are not a saved, speaker-attributed transcript in the API. Source: [Use Transcripts with Google Meet](https://support.google.com/meet/answer/12849897), checked 2026-10-30.
+**Fakt.** Zapisane transkrypcje Meet są dostępne po angielsku, francusku, niemiecku, włosku, japońsku, koreańsku, portugalsku i hiszpańsku. Polskiego nie ma na tej liście. Te same osiem języków dotyczy funkcji Gemini „Take notes for me”. Napisy na żywo obejmują język polski, ale napisy nie są zapisaną transkrypcją przypisaną do mówców i dostępną w API. Źródło: [Use Transcripts with Google Meet](https://support.google.com/meet/answer/12849897), sprawdzone 2026-10-30.
 
-**Fact.** Transcription is on by default for supported editions (including Business Standard) but is not automatic for each meeting. Someone in the meeting has to start it, unless auto-transcription was configured on the space. Source: [Turn meeting transcription on or off](https://knowledge.workspace.google.com/admin/meet/turn-meeting-transcription-on-or-off).
+**Fakt.** Transkrypcja jest domyślnie włączona dla obsługiwanych wersji (w tym Business Standard), ale nie uruchamia się automatycznie dla każdego spotkania. Ktoś na spotkaniu musi ją rozpocząć, chyba że w przestrzeni skonfigurowano automatyczną transkrypcję. Źródło: [Turn meeting transcription on or off](https://knowledge.workspace.google.com/admin/meet/turn-meeting-transcription-on-or-off).
 
 ### Meet Media API
 
-**Fact.** On 2026-10-28 Google deprecated the Meet Media API. It will not reach general availability. New Developer Preview signups are closed. Existing preview participants keep access until the endpoints are turned off on 2027-01-15. Google points meeting-summary and action-item use cases to the Meet REST API. Source: [Google Meet REST API release notes](https://developers.google.com/workspace/meet/release-notes), [Google Meet for developers](https://developers.google.com/workspace/meet).
+**Fakt.** 2026-10-28 Google wycofało Meet Media API. Nie osiągnie ono ogólnej dostępności. Nowe rejestracje do Developer Preview są zamknięte. Dotychczasowi uczestnicy wersji preview zachowają dostęp do wyłączenia endpointów 2027-01-15. Google wskazuje Meet REST API jako rozwiązanie dla przypadków użycia dotyczących podsumowań spotkań i elementów działań. Źródło: [Google Meet REST API release notes](https://developers.google.com/workspace/meet/release-notes), [Google Meet for developers](https://developers.google.com/workspace/meet).
 
-**Fact.** While it existed, the Media API delivered at most three virtual audio streams (the three loudest participants at a time). Each participant had a stable CSRC, mapped to a participant resource, so packets could be bucketed per person. It was receive-only, required host consent, and used the restricted scope `meetings.conference.media.readonly`. Source: [Manage virtual media streams](https://developers.google.com/workspace/meet/media-api/guides/virtual-streams).
+**Fakt.** W czasie istnienia Media API dostarczało najwyżej trzy wirtualne strumienie audio (w danym momencie od trzech najgłośniejszych uczestników). Każdy uczestnik miał stabilny CSRC przypisany do zasobu uczestnika, dzięki czemu pakiety można było grupować według osoby. API działało wyłącznie do odbioru, wymagało zgody hosta i używało ograniczonego zakresu `meetings.conference.media.readonly`. Źródło: [Manage virtual media streams](https://developers.google.com/workspace/meet/media-api/guides/virtual-streams).
 
-### Other official paths that do not give per-person audio
+### Inne oficjalne ścieżki, które nie dają dźwięku osobno dla każdej osoby
 
-**Fact.** A Meet add-on runs in an iframe and does not get `getUserMedia` access to the microphone or camera. Source: [Google Workspace Developers forum thread](https://discuss.google.dev/t/need-help-accessing-user-media-camera-microphone-in-google-meet-for-educational-analytics/245715/2).
+**Fakt.** Dodatek Meet działa w iframe i nie otrzymuje dostępu `getUserMedia` do mikrofonu ani kamery. Źródło: [Google Workspace Developers forum thread](https://discuss.google.dev/t/need-help-accessing-user-media-camera-microphone-in-google-meet-for-educational-analytics/245715/2).
 
-**Fact.** Third-party SIP and H.323 devices join Meet through a gateway as one participant. That is one mixed stream, not one track per person. Source: [Allow third-party devices to join Meet](https://knowledge.workspace.google.com/admin/meet-hardware/allow-3rd-party-devices-to-join-meet-video-meetings).
+**Fakt.** Urządzenia SIP i H.323 innych firm dołączają do Meet przez bramę jako jeden uczestnik. Oznacza to jeden zmiksowany strumień, a nie osobną ścieżkę dla każdej osoby. Źródło: [Allow third-party devices to join Meet](https://knowledge.workspace.google.com/admin/meet-hardware/allow-3rd-party-devices-to-join-meet-video-meetings).
 
-### Authorization
+### Autoryzacja
 
-**Fact.** Relevant OAuth scopes:
+**Fakt.** Istotne zakresy OAuth:
 
-| Scope | What it allows | Classification |
+| Zakres | Co umożliwia | Klasyfikacja |
 | --- | --- | --- |
-| `https://www.googleapis.com/auth/meetings.space.readonly` | Read metadata of any meeting space the user can access, including recordings, transcripts, and transcript entries | Sensitive |
-| `https://www.googleapis.com/auth/drive.meet.readonly` | Read Drive files created or edited by Google Meet | Restricted |
-| `https://www.googleapis.com/auth/drive.readonly` | Read the user's entire Drive | Restricted, wider than needed |
+| `https://www.googleapis.com/auth/meetings.space.readonly` | Odczyt metadanych każdej przestrzeni spotkania, do której użytkownik ma dostęp, w tym nagrań, transkrypcji i wpisów transkrypcji | Sensitive |
+| `https://www.googleapis.com/auth/drive.meet.readonly` | Odczyt plików na Dysku utworzonych lub zmodyfikowanych przez Google Meet | Restricted |
+| `https://www.googleapis.com/auth/drive.readonly` | Odczyt całego Dysku użytkownika | Restricted, szerszy niż potrzebny |
 
-A domain admin can grant domain-wide delegation so a service account impersonates a user without a consent screen per person. Impersonation still acts as that user. Source: [Authenticate and authorize Meet REST API requests](https://developers.google.com/workspace/meet/api/guides/authenticate-authorize).
+Administrator domeny może przyznać domain-wide delegation, aby konto usługi impersonowało użytkownika bez osobnego ekranu zgody dla każdej osoby. Impersonacja nadal działa z uprawnieniami tego użytkownika. Źródło: [Authenticate and authorize Meet REST API requests](https://developers.google.com/workspace/meet/api/guides/authenticate-authorize).
 
-**Fact.** Apps can subscribe to Meet events for one space or for all spaces belonging to one user, through the Google Workspace Events API. Source: [Google Meet REST API overview](https://developers.google.com/workspace/meet/api/guides/overview).
+**Fakt.** Aplikacje mogą subskrybować zdarzenia Meet dla jednej przestrzeni albo wszystkich przestrzeni należących do jednego użytkownika za pośrednictwem Google Workspace Events API. Źródło: [Google Meet REST API overview](https://developers.google.com/workspace/meet/api/guides/overview).
 
-### Bots
+### Boty
 
-**Fact.** Commercial meeting bots join as a visible participant. Recall.ai documents separate per-participant audio for Google Meet, capped at 16 concurrent speakers, with the participant's display name. Meet itself does not give the bot an email address. Email is filled only by fuzzy-matching the calendar guest list, and only for bots created through Recall's calendar integration. A signed-in bot uses a dedicated Google account. Google still decides whether the bot is admitted. Sources: [Separate audio per participant](https://docs.recall.ai/docs/how-to-get-separate-audio-per-participant-realtime), [Meeting participant emails](https://docs.recall.ai/docs/meeting-participant-emails), [Skip the waiting room](https://docs.recall.ai/docs/google-meet-skip-the-waiting-room).
+**Fakt.** Komercyjne boty spotkań dołączają jako widoczny uczestnik. Recall.ai opisuje osobne audio dla każdego uczestnika Google Meet, z limitem 16 jednoczesnych mówców i nazwą wyświetlaną uczestnika. Sam Meet nie przekazuje botowi adresu e-mail. E-mail jest uzupełniany wyłącznie przez przybliżone dopasowanie listy gości z kalendarza i tylko dla botów utworzonych przez integrację kalendarza Recall. Zalogowany bot korzysta z dedykowanego konta Google. Google nadal decyduje, czy bot zostanie dopuszczony. Źródła: [Separate audio per participant](https://docs.recall.ai/docs/how-to-get-separate-audio-per-participant-realtime), [Meeting participant emails](https://docs.recall.ai/docs/meeting-participant-emails), [Skip the waiting room](https://docs.recall.ai/docs/google-meet-skip-the-waiting-room).
 
-**Fact.** Google's Terms of Service prohibit bypassing protective measures and reverse engineering services to extract proprietary information, except where law allows it. The Meet acceptable use policy prohibits circumventing restrictions and interfering with the product. Sources: [Google Terms of Service](https://policies.google.com/terms), [Google Meet Acceptable Use Policy](https://support.google.com/meet/answer/9847091).
+**Fakt.** Warunki korzystania z usług Google zabraniają omijania środków ochronnych i inżynierii wstecznej usług w celu pozyskiwania informacji zastrzeżonych, z wyjątkiem sytuacji dozwolonych prawem. Zasady dozwolonego użycia Meet zabraniają obchodzenia ograniczeń i ingerowania w produkt. Źródła: [Google Terms of Service](https://policies.google.com/terms), [Google Meet Acceptable Use Policy](https://support.google.com/meet/answer/9847091).
 
-**Assumption.** A visible notetaker that a host admits is widely used in practice. That does not make an unofficial client a supported API. Building one means automating the Meet web page or speaking Meet's private media protocol.
+**Założenie.** Widoczny notetaker, którego host dopuszcza do spotkania, jest powszechnie używany w praktyce. Nie oznacza to, że nieoficjalny klient staje się obsługiwanym API. Zbudowanie takiego rozwiązania oznacza automatyzację strony Meet albo komunikację z prywatnym protokołem multimedialnym Meet.
 
-### Identity of a Meet participant
+### Tożsamość uczestnika Meet
 
-**Fact.** A Meet participant is a signed-in user, an anonymous user, or a phone user. A signed-in user has an opaque user id (interoperable with the Admin SDK and People API) and a display name, not an email on the participant resource itself. An anonymous or phone user has a display name only. A conference-room device is one participant. Source: [Work with participants](https://developers.google.com/workspace/meet/api/guides/participants).
+**Fakt.** Uczestnikiem Meet może być zalogowany użytkownik, użytkownik anonimowy albo użytkownik telefoniczny. Zalogowany użytkownik ma niejawny identyfikator użytkownika (interoperacyjny z Admin SDK i People API) oraz nazwę wyświetlaną, ale sam zasób uczestnika nie zawiera adresu e-mail. Użytkownik anonimowy lub telefoniczny ma wyłącznie nazwę wyświetlaną. Urządzenie w sali konferencyjnej jest jednym uczestnikiem. Źródło: [Work with participants](https://developers.google.com/workspace/meet/api/guides/participants).
 
-## 2. End-to-end workflow
+## 2. Przebieg od początku do końca
 
 ```mermaid
 flowchart TD
-  CalendarEvent[Meeting created in Calendar] --> MeetCall[Meet call, recording enabled]
-  MeetCall --> DriveMp4[MP4 on organizer Drive]
-  DriveMp4 --> EventOrPoll[Workspace Events or polling, state FILE_GENERATED]
-  EventOrPoll --> Fetch[Fetch MP4 via Drive API]
-  Fetch --> Asr[Polish ASR plus diarization]
-  Asr --> Segments[Segments with local speaker IDs]
-  Segments --> Summary[LLM summary with speaker IDs, role unknown]
-  Summary --> Publish[Published immediately with IDs]
-  Publish --> Mapping[Internal participant maps each ID to a person and a role]
-  Mapping --> Resummary[LLM summary regenerated with IDs and roles]
-  Resummary --> ReadView[API resolves names at read time]
+  CalendarEvent[Spotkanie utworzone w Calendar] --> MeetCall[Rozmowa Meet, nagrywanie włączone]
+  MeetCall --> DriveMp4[MP4 na Dysku organizatora]
+  DriveMp4 --> EventOrPoll[Workspace Events albo odpytywanie, stan FILE_GENERATED]
+  EventOrPoll --> Fetch[Pobranie MP4 przez Drive API]
+  Fetch --> Asr[Polskie ASR i diarization]
+  Asr --> Segments[Segmenty z lokalnymi identyfikatorami mówców]
+  Segments --> Summary[Podsumowanie LLM z identyfikatorami, rola unknown]
+  Summary --> Publish[Natychmiastowa publikacja z identyfikatorami]
+  Publish --> Mapping[Wewnętrzny uczestnik przypisuje identyfikator osobie i roli]
+  Mapping --> Resummary[Ponowne podsumowanie LLM z identyfikatorami i rolami]
+  Resummary --> ReadView[API rozwiązuje nazwy przy odczycie]
 ```
 
-### Steps
+### Kroki
 
-1. Someone creates a meeting in Google Calendar. Meet is the conference. The organizer is the Workspace user who owns the meeting space. They may or may not attend.
-2. A host, co-host, or (when host management is off) someone from the host's organization starts recording. Auto-recording on the space is the alternative. Participants see that recording is on. If the admin requires explicit consent, each person must accept before capture continues.
-3. When the conference ends, Meet writes an MP4 to the organizer's Drive. The file is not ready at the moment the call ends.
-4. The app learns that the file is ready either from a Workspace Events subscription or by listing conference records for each organizer and reading recordings in state `FILE_GENERATED`.
-5. A service account, impersonating the organizer, downloads the MP4 with the Drive API. The copy kept by the app follows the retention rules in Q6.
-6. Polish speech recognition plus diarization turns the mixed audio into segments. Each segment has a start time, an end time, text, and a speaker id local to this meeting (`spk_1`, `spk_2`, …). The id is not a person and is not reused across meetings. The transcription model drops backchannels such as "mhm", so they never become a speaker on the mapping screen.
-7. An external LLM receives the segments, the speaker ids, and the role `unknown` for every speaker. It returns a structured summary and tasks. Every quote and every task owner is a `speakerId`, never a name inside a sentence.
-8. The meeting is published immediately: transcript, summary, tasks, and the list of Meet participants. Unmapped speakers stay as ids. Nothing waits for a person to click.
-9. Any employee who was on the meeting and who already has access to the recording opens one screen. For each speaker they see a quote and can play a short clip. They assign that speaker to someone on the Meet participant list, or they skip. Merge, split, marking a segment as mixed, and adding a person who was not on the Meet list are not in this version (D4, section 5).
-10. Assigning a person also assigns a role, in the same action. An internal Workspace account defaults to `employee`. A guest already on the Meet list defaults to `client`. The person mapping can change the role.
-11. When a role actually changes, the LLM runs again on the same segments, now with `employee` or `client` on the mapped speakers. Speakers still not mapped stay `unknown`. Tasks stay keyed by `speakerId`. How the new summary replaces the published one is Q9.
-12. On every read, the API checks access, then resolves `speakerId` through the mapping table to a display name. If there is no mapping, the UI shows the id. The LLM is never given the name or the mapping legend.
+1. Ktoś tworzy spotkanie w Google Calendar. Meet jest konferencją. Organizatorem jest użytkownik Workspace posiadający przestrzeń spotkania. Może on uczestniczyć w spotkaniu, ale nie musi.
+2. Host, współhost albo — gdy zarządzanie przez hosta jest wyłączone — osoba z organizacji hosta rozpoczyna nagrywanie. Alternatywą jest automatyczne nagrywanie przestrzeni. Uczestnicy widzą, że nagrywanie jest włączone. Jeśli administrator wymaga wyraźnej zgody, każda osoba musi ją zaakceptować, zanim przechwytywanie będzie kontynuowane.
+3. Po zakończeniu konferencji Meet zapisuje MP4 na Dysku organizatora. W chwili zakończenia rozmowy plik nie jest jeszcze gotowy.
+4. Aplikacja dowiaduje się, że plik jest gotowy, albo przez subskrypcję Workspace Events, albo przez wylistowanie rekordów konferencji dla każdego organizatora i odczytanie nagrań w stanie `FILE_GENERATED`.
+5. Konto usługi, impersonujące organizatora, pobiera MP4 przez Drive API. Kopia przechowywana przez aplikację podlega zasadom retencji z Q6.
+6. Rozpoznawanie polskiej mowy wraz z diarization przekształca zmiksowany dźwięk w segmenty. Każdy segment ma czas rozpoczęcia, czas zakończenia, tekst i identyfikator mówcy lokalny dla tego spotkania (`spk_1`, `spk_2`, …). Identyfikator nie jest osobą i nie jest ponownie używany w innych spotkaniach. Model transkrypcji usuwa backchanneling, taki jak „mhm”, więc takie dźwięki nigdy nie stają się mówcą na ekranie przypisywania.
+7. Zewnętrzny LLM otrzymuje segmenty, identyfikatory mówców oraz rolę `unknown` dla każdego mówcy. Zwraca ustrukturyzowane podsumowanie i zadania. Każdy cytat i właściciel każdego zadania są określeni przez `speakerId`, nigdy przez nazwę umieszczoną w zdaniu.
+8. Spotkanie jest natychmiast publikowane: transkrypcja, podsumowanie, zadania i lista uczestników Meet. Nieprzypisani mówcy pozostają identyfikatorami. Nic nie czeka na kliknięcie osoby.
+9. Dowolny pracownik, który uczestniczył w spotkaniu i ma już dostęp do nagrania, otwiera jeden ekran. Przy każdym mówcy widzi cytat i może odtworzyć krótki fragment. Przypisuje mówcę osobie z listy uczestników Meet albo pomija. Scalanie, dzielenie, oznaczanie segmentu jako mieszanego i dodawanie osoby, której nie było na liście Meet, nie należą do tej wersji (D4, sekcja 5).
+10. Przypisanie osoby przypisuje również rolę, w ramach tej samej czynności. Wewnętrzne konto Workspace domyślnie otrzymuje `employee`. Gość znajdujący się już na liście Meet domyślnie otrzymuje `client`. Przypisanie osoby może zmienić rolę.
+11. Gdy rola faktycznie się zmieni, LLM uruchamia się ponownie na tych samych segmentach, tym razem z `employee` albo `client` przy przypisanych mówcach. Mówcy nadal nieprzypisani pozostają `unknown`. Zadania nadal są indeksowane przez `speakerId`. Sposób zastąpienia opublikowanego podsumowania nowym opisuje Q9.
+12. Przy każdym odczycie API sprawdza dostęp, a następnie rozwiązuje `speakerId` przez tabelę przypisań do nazwy wyświetlanej. Jeśli nie ma przypisania, interfejs pokazuje identyfikator. LLM nigdy nie otrzymuje nazwy ani legendy przypisań.
 
-### What is stored
+### Co jest przechowywane
 
-- **Segment:** meeting id, speaker id, start, end, text. This is the transcript. It is a list of segments, not one text block per speaker.
-- **Mapping:** meeting id, speaker id, person id or empty, role (`unknown`, `employee`, `client`), who changed it, when. History is kept. Two people editing the same speaker do not silently overwrite each other without a trace. The current row is the one the UI shows.
-- **Person:** an internal Workspace user, or a signed-in external Meet participant already on the meeting. A guest typed by hand, who was not a Meet participant, is a later version (section 5) and depends on Q12.
-- **Summary and tasks:** structured fields. Speaker references are ids. The name is applied when the API builds the response.
+- **Segment:** identyfikator spotkania, identyfikator mówcy, początek, koniec, tekst. To jest transkrypcja. Jest listą segmentów, a nie jednym blokiem tekstu na mówcę.
+- **Mapping:** identyfikator spotkania, identyfikator mówcy, identyfikator osoby albo wartość pusta, rola (`unknown`, `employee`, `client`), osoba, która zmieniła wpis, oraz czas zmiany. Historia jest zachowywana. Dwie osoby edytujące tego samego mówcę nie nadpisują się po cichu bez śladu. Interfejs pokazuje bieżący wiersz.
+- **Person:** wewnętrzny użytkownik Workspace albo zalogowany zewnętrzny uczestnik Meet, który już był na spotkaniu. Gość wpisany ręcznie, niebędący uczestnikiem Meet, należy do późniejszej wersji (sekcja 5) i zależy od Q12.
+- **Podsumowanie i zadania:** pola strukturalne. Odwołania do mówców są identyfikatorami. Nazwa jest stosowana podczas budowania odpowiedzi przez API.
 
-### Mapping screen
+### Ekran przypisywania
 
-The screen is for someone who was on the call. A quote is the first signal. Playback is there when the quote is not enough. The Meet participant list is the set of accounts to pick from. People who stayed silent are still on that list. A room device, or one Google account used by two humans, is one row. The first version cannot add the second human. That speaker stays an id until a later version, and only if Q12 says this case is real.
+Ekran jest przeznaczony dla osoby, która uczestniczyła w rozmowie. Cytat jest pierwszym sygnałem. Odtwarzanie jest dostępne, gdy cytat nie wystarcza. Lista uczestników Meet jest zbiorem kont, z którego można wybierać. Osoby, które milczały, nadal znajdują się na tej liście. Urządzenie w sali albo jedno konto Google używane przez dwoje ludzi jest jednym wierszem. Pierwsza wersja nie może dodać drugiej osoby. Taki mówca pozostaje identyfikatorem do późniejszej wersji i tylko jeśli Q12 potwierdzi, że taki przypadek rzeczywiście występuje.
 
-Operations in the first version:
+Operacje w pierwszej wersji:
 
-- **Assign.** Point a speaker id at a person who was a Meet participant. Role is set in the same step, with the default above.
-- **Skip.** Leave the speaker as an id. This is a valid outcome, not an error.
+- **Przypisz.** Wskaż osobę będącą uczestnikiem Meet dla danego identyfikatora mówcy. Rola jest ustawiana w tym samym kroku, zgodnie z opisanym wyżej domyślnym ustawieniem.
+- **Pomiń.** Pozostaw mówcę jako identyfikator. To prawidłowy wynik, a nie błąd.
 
-Backchannels are not filtered on this screen. The transcription model removes them before speakers are created.
+Backchanneling nie jest filtrowany na tym ekranie. Model transkrypcji usuwa go, zanim zostaną utworzeni mówcy.
 
-Not in the first version: merge, split, marking a segment as mixed, and adding a person who joined through someone else's Google account. See D4 and section 5.
+W pierwszej wersji nie ma: scalania, dzielenia, oznaczania segmentu jako mieszanego ani dodawania osoby, która dołączyła przez konto Google innej osoby. Zob. D4 i sekcję 5.
 
-Names, emails, and the mapping never enter the prompt. The prompt may contain speaker ids, the role of each speaker, and the words that were said.
+Nazwy, adresy e-mail i przypisania nigdy nie trafiają do promptu. Prompt może zawierać identyfikatory mówców, rolę każdego mówcy oraz wypowiedziane słowa.
 
-### Search
+### Wyszukiwanie
 
-A question such as "what did Bartek say about the budget" is handled in our API before any model call:
+Pytanie takie jak „co Bartek powiedział o budżecie” jest obsługiwane w naszym API przed jakimkolwiek wywołaniem modelu:
 
-1. Keep only meetings the caller is allowed to read.
-2. Resolve "Bartek" to a person. If several people match, ask which one. Do not rewrite an unrelated mention (a question about a topic that happens to be someone's name) into a speaker id.
-3. Collect segments mapped to that person. Unmapped segments are not included. The answer should say so when the meeting still has unlabeled speakers, so an empty result is not mistaken for "nothing was agreed".
-4. Send those quotes, still keyed by speaker id and role, to the LLM. Do not send a legend of the form "spk_3 = Bartek".
-5. Resolve ids to names only in the response shown to the caller.
+1. Zostaw tylko spotkania, które wywołujący może odczytać.
+2. Rozwiąż „Bartek” do osoby. Jeśli pasuje kilka osób, zapytaj którą. Nie zamieniaj niezwiązanej wzmianki (pytania o temat, który akurat jest czyimś imieniem) na identyfikator mówcy.
+3. Zbierz segmenty przypisane do tej osoby. Nieprzypisane segmenty nie wchodzą do zbioru. Odpowiedź powinna o tym powiedzieć, gdy spotkanie nadal ma nieoznaczonych mówców, aby pusty wynik nie został wzięty za „niczego nie uzgodniono”.
+4. Wyślij te cytaty do LLM, nadal oznaczone identyfikatorem mówcy i rolą. Nie wysyłaj legendy w postaci „spk_3 = Bartek”.
+5. Rozwiązuj identyfikatory do nazw wyłącznie w odpowiedzi pokazywanej wywołującemu.
 
-The assistant must not guess that an unlabeled speaker is someone from the participant list. A name from that list may appear as a speaker only when a human mapped that id, or when the name was spoken and the quote is shown as evidence.
+Asystent nie może zgadywać, że nieoznaczony mówca jest kimś z listy uczestników. Nazwa z tej listy może pojawić się jako mówca tylko wtedy, gdy człowiek przypisał ten identyfikator, albo gdy nazwa została wypowiedziana i cytat jest pokazywany jako dowód.
 
-## 3. Decisions
+## 3. Decyzje
 
-Each decision records what was chosen, why, the advantages, the disadvantages, the risks (impact and what we do about them), and the options that were rejected.
+Każda decyzja opisuje wybrane rozwiązanie, powody, zalety, wady, ryzyka (wpływ i sposób postępowania) oraz odrzucone opcje.
 
-### D1. Recordings come from the official MP4
+### D1. Nagrania pochodzą z oficjalnego pliku MP4
 
-**Chosen.** Meet REST API for conference records and recording metadata. Drive API for the MP4 bytes. Our own Polish transcription on that file.
+**Wybrano.** Meet REST API do rekordów konferencji i metadanych nagrań. Drive API do pobrania bajtów MP4. Własna polska transkrypcja tego pliku.
 
-**Why.** Polish is required. Native Meet transcripts do not support Polish (fact, section 1). The official file is the supported path, with the smallest scope that still yields the audio.
+**Dlaczego.** Wymagany jest język polski. Natywne transkrypcje Meet nie obsługują polskiego (fakt, sekcja 1). Oficjalny plik jest obsługiwaną ścieżką i wymaga najmniejszego zakresu uprawnień, który nadal zapewnia dostęp do dźwięku.
 
-**Advantages.** Supported API. One file per recording. Consent and the recording indicator are Meet's own. The app does not join the call.
+**Zalety.** Obsługiwane API. Jeden plik na nagranie. Zgoda i wskaźnik nagrywania należą do Meet. Aplikacja nie dołącza do rozmowy.
 
-**Disadvantages.** One mixed track. Speaker identity is not in the file. Recording has to be turned on, and the file appears only after `FILE_GENERATED`. `conferenceRecords.list` only returns meetings organized by the impersonated user, so the app must impersonate each organizer.
+**Wady.** Jedna zmiksowana ścieżka. Tożsamość mówcy nie znajduje się w pliku. Nagrywanie musi być włączone, a plik pojawia się dopiero po `FILE_GENERATED`. `conferenceRecords.list` zwraca tylko spotkania zorganizowane przez impersonowanego użytkownika, więc aplikacja musi impersonować każdego organizatora.
 
-**Risks.**
+**Ryzyka.**
 
-- Recording never starts. Impact: high for that meeting, the pipeline has nothing to fetch. Mitigation: detect meetings with no recording and surface them. Do not invent a transcript.
-- Organizer deletes the Drive file before download. Impact: medium. Mitigation: fetch on `FILE_GENERATED` rather than hours later.
-- Domain-wide delegation can read every Meet file of the impersonated users. Impact: high if the service account is broader than this product. Mitigation: section 7.
+- Nagrywanie nigdy się nie rozpoczyna. Wpływ: wysoki dla tego spotkania, bo potok nie ma czego pobrać. Ograniczenie: wykrywać spotkania bez nagrania i je pokazywać. Nie wymyślać transkrypcji.
+- Organizator usuwa plik z Dysku przed pobraniem. Wpływ: średni. Ograniczenie: pobierać przy `FILE_GENERATED`, a nie wiele godzin później.
+- Domain-wide delegation może odczytać każdy plik Meet impersonowanych użytkowników. Wpływ: wysoki, jeśli konto usługi jest szersze niż ten produkt. Ograniczenie: sekcja 7.
 
-**Rejected.**
+**Odrzucono.**
 
-- **Native transcript entries as the Polish transcript.** The API does split speech by participant, and that attribution is better than acoustic diarization, because Meet knows which client sent the audio. The language list does not include Polish, so there is nothing to fetch for Vinseo's meetings. Revisit if Google adds Polish.
-- **Meet Media API.** It was the best technical way to get a separate track per participant, tied to a participant resource. Google deprecated it on 2026-10-28 and will turn the endpoints off on 2027-01-15. New signups are closed. Too short a life for a product.
-- **A commercial bot (Recall.ai and similar).** Separate audio per participant, with the display name, is a real product. The recording of client meetings would be processed by that vendor. That conflicts with "client data should not go where it should not." A self-hosted bot is the next rejection.
-- **Our own Meet client.** A browser or custom WebRTC client joins as a visible participant, buckets audio by participant, and stores it on our side. Rejected because of maintenance cost and instability: Meet can change the page without notice, sessions expire, one account can be in one meeting at a time, and headless guests are often blocked. It also sits outside the published API, against the Terms of Service rules on bypassing protections and reverse engineering. Not a supported integration.
-- **An agent on each employee laptop, recording that person's microphone.** The track is clean and already tied to the logged-in account. It does not capture the client, unless the client also installs it, which they will not. Two capture paths to operate, for about 25 machines. Rejected for the first version.
+- **Natywne wpisy transkrypcji jako polska transkrypcja.** API dzieli wypowiedzi według uczestnika, a takie przypisanie jest lepsze niż akustyczna diarization, ponieważ Meet wie, który klient wysłał dźwięk. Lista języków nie obejmuje polskiego, więc dla spotkań Vinseo nie ma czego pobrać. Wrócić do tego, jeśli Google doda polski.
+- **Meet Media API.** Było najlepszą techniczną drogą do osobnej ścieżki na uczestnika, powiązanej z zasobem uczestnika. Google wycofało je 2026-10-28 i wyłączy endpointy 2027-01-15. Nowe rejestracje są zamknięte. Zbyt krótki czas życia jak na produkt.
+- **Komercyjny bot (Recall.ai i podobne).** Osobne audio na uczestnika, z nazwą wyświetlaną, jest prawdziwym produktem. Nagrania spotkań z klientami przetwarzałby ten dostawca. To kłóci się z zasadą, że dane klienta nie powinny trafiać tam, gdzie nie powinny. Kolejnym odrzuceniem jest bot hostowany u nas.
+- **Własny klient Meet.** Przeglądarka albo własny klient WebRTC dołącza jako widoczny uczestnik, grupuje audio według uczestnika i zapisuje je po naszej stronie. Odrzucono ze względu na koszt utrzymania i niestabilność: Meet może zmienić stronę bez zapowiedzi, sesje wygasają, jedno konto może być tylko na jednym spotkaniu naraz, a goście headless są często blokowani. Rozwiązanie leży też poza opublikowanym API, wbrew zasadom Terms of Service dotyczącym omijania zabezpieczeń i inżynierii wstecznej. To nie jest obsługiwana integracja.
+- **Agent na laptopie każdego pracownika, nagrywający mikrofon tej osoby.** Ścieżka jest czysta i już powiązana z zalogowanym kontem. Nie nagrywa klienta, chyba że klient też ją zainstaluje, czego nie zrobi. Dwie ścieżki przechwytywania do utrzymania, dla około 25 maszyn. Odrzucono dla pierwszej wersji.
 
-### D2. Speakers come from diarization of the mixed file
+### D2. Mówcy pochodzą z diarization zmiksowanego pliku
 
-**Chosen.** The ASR step returns segments grouped into speaker ids local to the meeting. Those ids are labels such as "speaker 1", not accounts.
+**Wybrano.** Krok ASR zwraca segmenty pogrupowane według identyfikatorów mówców lokalnych dla spotkania. Identyfikatory są etykietami takimi jak „speaker 1”, a nie kontami.
 
-**Why.** The MP4 has one audio mix. Diarization is what the file can support. The assignment asks for a transcript divided by speaker. It does not require each speaker to be a Google account.
+**Dlaczego.** MP4 zawiera jeden miks audio. Diarization odpowiada temu, co może obsłużyć plik. Zadanie wymaga transkrypcji podzielonej według mówców, ale nie wymaga, aby każdy mówca był kontem Google.
 
-**Advantages.** No extra software in the meeting. Works for Polish with English words, provided the model does. Segments stay addressable, so a later version can merge or split them without a new recording.
+**Zalety.** Brak dodatkowego oprogramowania na spotkaniu. Rozwiązanie działa dla języka polskiego z angielskimi słowami, o ile model sobie z tym radzi. Segmenty pozostają adresowalne, więc późniejsza wersja może je scalać lub dzielić bez nowego nagrania.
 
-**Disadvantages.** A cluster can contain two people, or one person can be split into two ids. A meeting room, or two people on one Google account, is one Meet participant and may be two voices. The first version does not repair that. Overlapping speech inside one segment cannot be separated by hand.
+**Wady.** Jeden klaster może zawierać dwie osoby albo jedna osoba może zostać podzielona na dwa identyfikatory. Sala konferencyjna albo dwie osoby korzystające z jednego konta Google są jednym uczestnikiem Meet, ale mogą reprezentować dwa głosy. Pierwsza wersja tego nie naprawia. Nakładającej się mowy w jednym segmencie nie można rozdzielić ręcznie.
 
-**Risks.**
+**Ryzyka.**
 
-- Bad diarization makes the mapping screen frustrating, and people stop using it. Impact: medium if it shows up in real meetings. Mitigation in this version: the transcription model drops backchannels, and skip is a valid result. Merge and split are added only if real meetings show the model is not good enough (D4).
-- Re-running diarization later would renumber speakers under an existing mapping. Impact: high if done carelessly. Mitigation: not in the first version. If it is added, mappings are reattached by segment time ranges, not by the old label string.
+- Zła diarization sprawia, że ekran przypisywania jest frustrujący i ludzie przestają go używać. Wpływ: średni, jeśli pojawi się to na prawdziwych spotkaniach. Ograniczenie w tej wersji: model transkrypcji usuwa backchanneling, a pominięcie jest prawidłowym wynikiem. Scalanie i dzielenie dodajemy tylko wtedy, gdy prawdziwe spotkania pokażą, że model nie jest wystarczająco dobry (D4).
+- Ponowne uruchomienie diarization później przenumerowałoby mówców pod istniejącym przypisaniem. Wpływ: wysoki, jeśli zrobić to nieuważnie. Ograniczenie: nie w pierwszej wersji. Jeśli zostanie dodane, przypisania podpina się według zakresów czasu segmentów, a nie według starego tekstu etykiety.
 
-**Rejected.** Per-person tracks from a bot or the Media API. See D1.
+**Odrzucono.** Ścieżki osobne dla osób uzyskane przez bota albo Media API. Zob. D1.
 
-### D3. Humans map speakers, as a company procedure, and ids remain when they do not
+### D3. Ludzie przypisują mówców w ramach procedury firmowej, a w przeciwnym razie pozostają identyfikatory
 
-**Chosen.** Any employee who attended the meeting and who already has access to the recording may map speakers. Mapping is the expected procedure. If nobody does it, the transcript, summary, and tasks stay under speaker ids. Publication does not wait.
+**Wybrano.** Mówców może przypisywać każdy pracownik, który uczestniczył w spotkaniu i ma już dostęp do nagrania. Przypisywanie jest oczekiwaną procedurą. Jeśli nikt go nie wykona, transkrypcja, podsumowanie i zadania pozostają przypisane do identyfikatorów mówców. Publikacja nie czeka.
 
-**Why.** The person who was on the call can recognize a voice or a quote. The calendar organizer often is not that person, and may have left the company. Blocking the summary until someone clicks would leave many of the roughly 400 meetings a month (300 hours, about 45 minutes each) without a summary. **Assumption:** 300 hours and 45 minutes in `docs/zadanie.md` imply on the order of 400 meetings a month. That count is only for sizing the human step.
+**Dlaczego.** Osoba obecna na rozmowie może rozpoznać głos albo cytat. Organizator w kalendarzu często nie jest tą osobą i może już nie pracować w firmie. Wstrzymywanie podsumowania do czasu kliknięcia pozostawiłoby wiele z około 400 spotkań miesięcznie (300 godzin, około 45 minut każde) bez podsumowania. **Założenie:** 300 godzin i 45 minut w `docs/zadanie.md` oznacza około 400 spotkań miesięcznie. Ta liczba służy wyłącznie do oszacowania udziału pracy człowieka.
 
-**Advantages.** A wrong name is worse than "speaker 2" on a client commitment. Skip is an explicit, safe result. The work is spread across people who were actually there, not a central admin. Access to the mapping screen is the same as access to the recording. There is no role that can listen to every meeting just to label it.
+**Zalety.** Błędna nazwa jest gorsza niż „speaker 2” przy zobowiązaniu wobec klienta. Pomiń jest jawnym, bezpiecznym wynikiem. Praca jest rozłożona między osoby, które rzeczywiście były na spotkaniu, a nie skupiona u centralnego administratora. Dostęp do ekranu przypisywania jest taki sam jak dostęp do nagrania. Nie ma roli, która mogłaby słuchać każdego spotkania tylko po to, aby je opisać.
 
-**Disadvantages.** The step is optional in the software, so it will be skipped when people are busy. Voice memory fades. After the audio is deleted, only quotes remain. Two attendees can assign the same speaker to two people. The current row must be visible, and the history must show who wrote it.
+**Wady.** Ten krok jest opcjonalny w oprogramowaniu, więc będzie pomijany, gdy ludzie są zajęci. Pamięć głosu zanika. Po usunięciu audio pozostają tylko cytaty. Dwoje uczestników może przypisać tego samego mówcę dwóm osobom. Bieżący wiersz musi być widoczny, a historia musi pokazywać, kto go utworzył.
 
-**Risks.**
+**Ryzyka.**
 
-- Most meetings stay unlabeled, and search by name misses them. Impact: medium, and accepted. Mitigation: the meeting screen shows which speakers have no person. An empty answer must not look like "nothing was agreed".
-- Someone assigns the wrong person, and a task briefly has the wrong owner. Impact: medium. Mitigation: undo through the mapping, history, quote and playback on the screen. Tasks stay keyed by `speakerId`, so the view updates on the next read.
-- The organizer never attended. Impact: high if only the organizer could map. Mitigation: any internal attendee with access can map. This is why organizer-only was rejected.
+- Większość spotkań pozostaje bez etykiet, a wyszukiwanie po nazwie ich nie znajduje. Wpływ: średni i zaakceptowany. Ograniczenie: ekran spotkania pokazuje, którzy mówcy nie mają przypisanej osoby. Pusta odpowiedź nie może wyglądać tak, jakby „niczego nie uzgodniono”.
+- Ktoś przypisuje niewłaściwą osobę i zadanie przez pewien czas ma niewłaściwego właściciela. Wpływ: średni. Ograniczenie: cofnięcie przez przypisanie, historię, cytat i odtwarzanie na ekranie. Zadania nadal mają klucz `speakerId`, więc widok zaktualizuje się przy kolejnym odczycie.
+- Organizator nigdy nie uczestniczył w spotkaniu. Wpływ: wysoki, gdyby tylko organizator mógł przypisywać. Ograniczenie: każdy wewnętrzny uczestnik z dostępem może przypisywać. Dlatego odrzucono wariant tylko dla organizatora.
 
-**Rejected.**
+**Odrzucono.**
 
-- **Organizer only.** The organizer is often the right person, and often is not in the room. A departing organizer would freeze unlabeled meetings.
-- **Hold the summary until mapping is done.** More meetings would have names. Many meetings would have no summary at all.
-- **Correct only the task owner, not the speaker.** Less clicking, and it hits "who, what, by when". The transcript and later questions ("what did the client say") would stay on ids. Kept as a fallback if the full screen does not fit the first version. The chosen screen covers tasks as well, because tasks point at speaker ids.
-- **Everyone introduces themselves at the start.** A name in the first minute can be a hint. It fails when people talk over each other, join late, use a short name, or sit in a room with one microphone. Asking a known client to introduce themselves on the third call is awkward. The mapping screen is still required. Rejected as a ritual. Names that people happen to say are still useful later, as a suggestion, not in the first version (D8).
+- **Tylko organizator.** Organizator często jest właściwą osobą, ale często nie ma go w pokoju. Odejście organizatora zamroziłoby nieoznaczone spotkania.
+- **Wstrzymanie podsumowania do zakończenia przypisywania.** Więcej spotkań miałoby nazwy. Wiele spotkań nie miałoby jednak żadnego podsumowania.
+- **Korygowanie tylko właściciela zadania, a nie mówcy.** Mniej kliknięć i bezpośrednia obsługa wymogu „kto, co i do kiedy”. Transkrypcja i późniejsze pytania („co powiedział klient”) nadal pozostawałyby przypisane do identyfikatorów. Zachowano jako wariant awaryjny, gdyby pełny ekran nie zmieścił się w pierwszej wersji. Wybrany ekran obejmuje również zadania, ponieważ wskazują one identyfikatory mówców.
+- **Wszyscy przedstawiają się na początku.** Nazwa w pierwszej minucie może być wskazówką. To zawodzi, gdy ludzie mówią jednocześnie, dołączają późno, używają skróconego imienia albo siedzą w sali z jednym mikrofonem. Proszenie znanego klienta o przedstawienie się podczas trzeciej rozmowy jest niezręczne. Ekran przypisywania nadal jest potrzebny. Odrzucono jako rytuał. Nazwy wypowiedziane przypadkiem mogą być później przydatne jako sugestia, ale nie w pierwszej wersji (D8).
 
-### D4. The first version only assigns a speaker to a Meet participant
+### D4. Pierwsza wersja przypisuje mówcę wyłącznie do uczestnika Meet
 
-**Chosen.** The mapping screen can assign a speaker id to a person who was on the Meet participant list, or skip. It cannot merge speakers, split a speaker by moving segments, mark a segment as mixed, or add a person who was not a Meet participant.
+**Wybrano.** Ekran przypisywania może przypisać identyfikator mówcy osobie z listy uczestników Meet albo pominąć przypisanie. Nie może scalać mówców, dzielić mówcy przez przenoszenie segmentów, oznaczać segmentu jako mieszanego ani dodawać osoby, która nie była uczestnikiem Meet.
 
-**Why.** The transcription model may separate speakers well enough that hand repair is unnecessary. It already drops backchannels, so the screen is not filled with "mhm". Merge, split, and mixed are real repairs, and they are also extra UI on every meeting. They wait until real recordings show they are needed. Adding someone who was not on the Meet list is a separate, narrower case: two people can share one Google account, diarization then returns more speakers than accounts, and one of those speakers has nobody on the list to point at. Example: the Meet list is `jan@gmail.com` and `bartek@gmail.com`, but Bartek and Paweł both sat at Bartek's account. The model returns three speakers. One of them is Paweł, who is not a Meet participant. Whether that happens often enough to build is Q12. Until then, that speaker stays an id.
+**Dlaczego.** Model transkrypcji może rozdzielać mówców na tyle dobrze, że ręczna naprawa nie będzie potrzebna. Już usuwa backchanneling, więc ekran nie jest wypełniony wpisami „mhm”. Scalanie, dzielenie i oznaczanie segmentów jako mieszanych to rzeczywiste naprawy, ale również dodatkowy interfejs przy każdym spotkaniu. Poczekają, aż prawdziwe nagrania pokażą, że są potrzebne. Dodanie osoby nieobecnej na liście Meet to osobny, węższy przypadek: dwie osoby mogą współdzielić konto Google, więc diarization zwróci więcej mówców niż kont, a jednego z nich nie będzie można przypisać do nikogo z listy. Przykład: lista Meet zawiera `jan@gmail.com` i `bartek@gmail.com`, ale Bartek i Paweł siedzieli przy koncie Bartka. Model zwraca trzech mówców. Jednym z nich jest Paweł, który nie jest uczestnikiem Meet. Czy zdarza się to wystarczająco często, aby budować obsługę tego przypadku, określa Q12. Do tego czasu mówca pozostaje identyfikatorem.
 
-**Advantages.** The first screen is assign or skip. A wrong repair cannot scramble segments. We learn from the MVP whether the model is good enough before building the editor.
+**Zalety.** Pierwszy ekran oferuje przypisanie albo pominięcie. Błędna naprawa nie może pomieszać segmentów. Z MVP dowiemy się, czy model jest wystarczająco dobry, zanim zbudujemy edytor.
 
-**Disadvantages.** A speaker the model split in two stays two ids, and someone may map both to the same person or skip one. Two people on one account cannot both get a name. Overlapping speech stays inside whatever segment the model produced.
+**Wady.** Mówca podzielony przez model na dwie osoby pozostaje dwoma identyfikatorami, a ktoś może przypisać oba tej samej osobie albo pominąć jeden. Dwie osoby korzystające z jednego konta nie mogą obie otrzymać nazwy. Nakładająca się mowa pozostaje w segmencie utworzonym przez model.
 
-**Risks.**
+**Ryzyka.**
 
-- The model is worse than expected, and people work around it by skipping speakers. Impact: medium, visible in the "share of meetings mapped" metric in section 5. Mitigation: add merge and split then, on the segment list we already store. Do not rebuild the pipeline.
-- Shared accounts are common, so many speakers stay unnamed. Impact: medium, and it is exactly what Q12 is for. Mitigation: a later action that creates a guest and points one existing speaker id at that guest. The guest does not receive words by being created. The human picks the speaker.
+- Model jest gorszy, niż oczekiwano, a ludzie obchodzą problem, pomijając mówców. Wpływ: średni, widoczny w mierniku „udział spotkań z przypisaniami” w sekcji 5. Ograniczenie: wtedy dodać scalanie i dzielenie na podstawie przechowywanej już listy segmentów. Nie przebudowywać potoku.
+- Współdzielone konta są częste, więc wielu mówców pozostaje bez nazwy. Wpływ: średni — właśnie temu służy Q12. Ograniczenie: późniejsza czynność tworzy gościa i wskazuje tego gościa przy jednym istniejącym identyfikatorze mówcy. Samo utworzenie gościa nie przypisuje mu wypowiedzi. Mówcę wybiera człowiek.
 
-**Kept for a later version, not rejected.** If the MVP shows the need: merge (move every segment of one speaker id onto another), split (new speaker id, move selected segments), mixed (one segment with two voices at once stays unattributed and is not a task quote), and a hand-added guest assigned to one existing speaker. Re-running the whole file through another diarization model is a worse fix. It renumbers ids under an existing mapping. Segment edits do not.
+**Zachowano na późniejszą wersję, nie odrzucono.** Jeśli MVP pokaże taką potrzebę: scalanie (przeniesienie każdego segmentu jednego identyfikatora mówcy do innego), dzielenie (nowy identyfikator mówcy i przeniesienie wybranych segmentów), oznaczenie jako mixed (jeden segment z dwoma głosami pozostaje bez przypisania i nie jest cytatem zadania) oraz ręcznie dodany gość przypisany do jednego istniejącego mówcy. Ponowne przepuszczenie całego pliku przez inny model diarization byłoby gorszą naprawą. Zmieniłoby numerację identyfikatorów przy istniejących przypisaniach. Edycja segmentów tego nie robi.
 
-### D5. Names stay in our API. The model sees speaker ids
+### D5. Nazwy pozostają w naszym API. Model widzi identyfikatory mówców
 
-**Chosen.** Stored transcript, summary, and tasks use speaker ids. The mapping table is the only place that links an id to a person. The API resolves the name at read time, after the access check. The model never receives a name, an email, or the legend.
+**Wybrano.** Przechowywana transkrypcja, podsumowanie i zadania używają identyfikatorów mówców. Tabela przypisań jest jedynym miejscem łączącym identyfikator z osobą. API rozwiązuje nazwę podczas odczytu, po sprawdzeniu dostępu. Model nigdy nie otrzymuje nazwy, adresu e-mail ani legendy.
 
-**Why.** Putting the name in the sentence means a wrong click is baked into prose, Polish inflection breaks a text replace ("zadanie Bartka" does not contain the token "speaker 3"), and the name is in the vendor's prompt logs. A structured `speakerId` avoids the replace. The view updates when the mapping changes, including after a person is renamed.
+**Dlaczego.** Umieszczenie nazwy w zdaniu oznacza, że błędne kliknięcie zostaje utrwalone w tekście, polska fleksja utrudnia podmianę tekstu („zadanie Bartka” nie zawiera tokenu „speaker 3”), a nazwa trafia do logów promptów dostawcy. Strukturalny `speakerId` eliminuje potrzebę podmiany. Widok aktualizuje się po zmianie przypisania, także po zmianie nazwy osoby.
 
-**Advantages.** Undo is one row. Regenerating the LLM is not required for a name change. Unmapped speakers stay honest. A test can assert that outbound prompts contain no display names from the mapping. Search cannot leak a meeting the caller cannot access, because resolution happens after the access filter.
+**Zalety.** Cofnięcie zmiany dotyczy jednego wiersza. Zmiana nazwy nie wymaga ponownego uruchamiania LLM. Nieprzypisani mówcy pozostają opisani zgodnie z prawdą. Test może sprawdzić, że wysyłane prompty nie zawierają nazw wyświetlanych z tabeli przypisań. Wyszukiwanie nie ujawni spotkania, do którego wywołujący nie ma dostępu, ponieważ rozwiązanie nazw następuje po filtrowaniu dostępu.
 
-**Disadvantages.** The model writes worse Polish in free text, because the word for "speaker" is masculine, so it will say "zobowiązał się" about a woman. The model does not know the person's name, so it cannot inflect it. Search by name is our code, not a full-text query. This is accepted.
+**Wady.** Model pisze gorszą polszczyznę w swobodnym tekście, ponieważ słowo „mówca” jest rodzaju męskiego, więc powie „zobowiązał się” o kobiecie. Model nie zna nazwy osoby, więc nie może jej odmieniać. Wyszukiwanie po nazwie jest realizowane przez nasz kod, a nie przez zapytanie pełnotekstowe. Jest to zaakceptowane.
 
-**Risks.**
+**Ryzyka.**
 
-- The model paraphrases the id ("the third speaker", "he") and a string replace would miss it. Impact: high if names were substituted inside sentences. Mitigation: do not substitute inside sentences. The name is a label rendered next to a quote or a task that already has `speakerId`.
-- "What did Bartek say" is implemented as a global replace of the word Bartek. Impact: high. It hits the wrong person, another meeting, or a question that is about a topic. Mitigation: the search steps in section 2.
-- The same small integer means different people in different meetings. Impact: high if one global id is pasted into every transcript. Mitigation: speaker ids are local. The person id in the mapping is what joins meetings.
-- Spoken names still leave in the sentence ("Jan from the client, budget fifty thousand"). Impact: high for the privacy write-up, low for day-to-day operation if the test is honest. The mask covers labels, not the content of speech. The transcript is still personal data. The vendor is still a processor.
+- Model parafrazuje identyfikator („the third speaker”, „he”), a podmiana ciągu znaków go nie znajdzie. Wpływ: wysoki, gdyby nazwy były podstawiane w zdaniach. Ograniczenie: nie podmieniać nazw w zdaniach. Nazwa jest etykietą renderowaną obok cytatu albo zadania, które już ma `speakerId`.
+- „What did Bartek say” zaimplementowane jako globalna podmiana słowa Bartek trafiłoby w niewłaściwą osobę, inne spotkanie albo pytanie dotyczące tematu. Wpływ: wysoki. Ograniczenie: kroki wyszukiwania z sekcji 2.
+- Ta sama mała liczba całkowita oznacza różne osoby na różnych spotkaniach. Wpływ: wysoki, gdyby jeden globalny identyfikator był wklejany do każdej transkrypcji. Ograniczenie: identyfikatory mówców są lokalne. Spotkania łączy identyfikator osoby w tabeli przypisań.
+- Wypowiedziane nazwy nadal pozostają w zdaniu („Jan from the client, budget fifty thousand”). Wpływ: wysoki dla opisu prywatności, niski dla codziennego działania, jeśli test jest uczciwy. Maska obejmuje etykiety, a nie treść mowy. Transkrypcja nadal jest danymi osobowymi. Dostawca nadal jest procesorem.
 
-**Rejected.**
+**Odrzucono.**
 
-- **Write the full name into the transcript and the summary, and send that text to the model.** Best prose and best task owners. A wrong mapping is stuck in sentences until a full regeneration. Inflected forms are easy to miss. The name is in the prompt. A full-text index then contains the identity even when nobody said the name. Rejected because the privacy decision was to keep the identity link inside our API.
-- **Send only the first name.** Better grammar than "speaker 3" for a common Polish name. Still personal data. In a company of about 40 people a first name is often unique, and together with the topic it identifies the person. Two people with the same first name collapse into one speaker if the name is the key. A surname initial does not finish the job (two Annas whose surnames start with K) and is close to sending the surname. A numeric suffix ("Anna 2") can make a prompt unique for one meeting, but it is a poor key for storage. Rejected as the identifier. The transcript key remains the speaker id. First names are not sent.
+- **Wpisanie pełnej nazwy do transkrypcji i podsumowania oraz wysłanie tego tekstu do modelu.** Najlepsza proza i najlepsi właściciele zadań. Błędne przypisanie pozostaje w zdaniach do czasu pełnego ponownego wygenerowania. Formy odmienione łatwo przeoczyć. Nazwa znajduje się w prompcie. Indeks pełnotekstowy zawierałby tożsamość nawet wtedy, gdy nikt nie wypowiedział nazwy. Odrzucono, ponieważ decyzja dotycząca prywatności zakłada zachowanie powiązania tożsamości wewnątrz naszego API.
+- **Wysłanie tylko imienia.** Lepsza gramatyka niż „speaker 3” przy typowym polskim imieniu. Nadal są to dane osobowe. W firmie liczącej około 40 osób imię często jest unikatowe i razem z tematem identyfikuje osobę. Dwie osoby o tym samym imieniu zlałyby się w jednego mówcę, gdyby imię było kluczem. Inicjał nazwiska nie rozwiązuje problemu (dwie Anny, których nazwiska zaczynają się na K) i jest bliski wysłaniu nazwiska. Sufiks liczbowy („Anna 2”) może uczynić prompt unikatowym dla jednego spotkania, ale jest słabym kluczem do przechowywania. Odrzucono jako identyfikator. Kluczem transkrypcji pozostaje identyfikator mówcy. Imiona nie są wysyłane.
 
-### D6. The model receives a role, assigned in the same step as the person
+### D6. Model otrzymuje rolę przypisaną w tym samym kroku co osoba
 
-**Chosen.** Each speaker sent to the LLM has a role: `unknown`, `employee`, or `client`. The role is chosen on the mapping screen together with the person. An internal Workspace account defaults to `employee`. A guest already on the Meet list defaults to `client`. The human can override. A person who was not a Meet participant cannot be added in this version (D4).
+**Wybrano.** Każdy mówca wysyłany do LLM ma rolę: `unknown`, `employee` albo `client`. Rolę wybiera się na ekranie przypisywania razem z osobą. Wewnętrzne konto Workspace domyślnie otrzymuje `employee`. Gość już obecny na liście Meet domyślnie otrzymuje `client`. Człowiek może zmienić to ustawienie. Osoby, która nie była uczestnikiem Meet, nie można dodać w tej wersji (D4).
 
-The first summary is generated as soon as segments exist, with every role `unknown`. After a role actually changes, the summary and tasks are generated again from the same segments, now with roles. Speakers nobody mapped stay `unknown`. Tasks remain keyed by `speakerId`.
+Pierwsze podsumowanie powstaje, gdy tylko istnieją segmenty, z każdą rolą ustawioną na `unknown`. Po faktycznej zmianie roli podsumowanie i zadania są generowane ponownie z tych samych segmentów, już z rolami. Mówcy, których nikt nie przypisał, pozostają `unknown`. Zadania nadal mają klucz `speakerId`.
 
-**Why.** "Who promised what" is the business problem. An id alone does not tell the model which side of the table spoke. The role answers that without sending a name. Doing it in the same step means there is no second procedure.
+**Dlaczego.** Problemem biznesowym jest „kto co obiecał”. Sam identyfikator nie mówi modelowi, po której stronie stołu siedział mówca. Rola odpowiada na to bez wysyłania nazwy. Ustawienie jej w tym samym kroku oznacza brak drugiej procedury.
 
-**Advantages.** Task ownership improves once someone maps the meeting. Defaults match the usual case, so the extra click is only the exception. Skipped meetings still publish, with `unknown`. A wrong role is corrected the same way as a wrong person: edit the row, regenerate.
+**Zalety.** Właścicielstwo zadań poprawia się po przypisaniu spotkania. Wartości domyślne odpowiadają typowemu przypadkowi, więc dodatkowe kliknięcie jest potrzebne tylko w wyjątkach. Pominięte spotkania nadal są publikowane, z rolą `unknown`. Błędną rolę koryguje się tak samo jak błędną osobę: edytuje się wiersz i generuje ponownie.
 
-**Disadvantages.** The first published summary is weaker than the one after mapping. Regeneration changes wording the user may already have read. A role plus the transcript can still identify a client when only two people were on the call. The role is personal data, thinner than a name, and it still leaves the company.
+**Wady.** Pierwsze opublikowane podsumowanie jest słabsze niż to po przypisaniu. Ponowne generowanie zmienia sformułowania, które użytkownik mógł już przeczytać. Rola wraz z transkrypcją nadal może identyfikować klienta, gdy w rozmowie były tylko dwie osoby. Rola jest daną osobową, uboższą niż nazwa, ale nadal opuszcza firmę.
 
-**Risks.**
+**Ryzyka.**
 
-- Regeneration surprises someone who quoted the old summary. Impact: medium. Mitigation: Q9, still open. Do not regenerate when the mapping edit did not change a role.
-- A wrong role points tasks at the wrong side. Impact: medium. Mitigation: mapping history, and the task still shows the quote.
-- Cost of a second LLM call for every mapped meeting. Impact: depends on Q2. **Assumption:** one extra call per mapped meeting is small next to transcription cost. Check it when the model and the price are chosen.
+- Ponowne generowanie zaskakuje osobę, która zacytowała stare podsumowanie. Wpływ: średni. Ograniczenie: Q9 pozostaje otwarte. Nie generować ponownie, gdy edycja przypisania nie zmieniła roli.
+- Błędna rola wskazuje zadania niewłaściwej stronie. Wpływ: średni. Ograniczenie: historia przypisań, a zadanie nadal pokazuje cytat.
+- Koszt drugiego wywołania LLM dla każdego przypisanego spotkania. Wpływ: zależy od Q2. **Założenie:** jedno dodatkowe wywołanie na przypisane spotkanie jest małe wobec kosztu transkrypcji. Sprawdzić to, gdy zostaną wybrane model i cena.
 
-**Rejected.** Sending the role only in a later version. The mapping screen already exists. Leaving the role out of the first version would throw away the reason for the second LLM call's design. Also rejected: blocking the first summary until roles exist. That brings back D3's rejected option.
+**Odrzucono.** Wysyłanie roli dopiero w późniejszej wersji. Ekran przypisywania już istnieje. Pominięcie roli w pierwszej wersji pozbawiłoby sensu projekt drugiego wywołania LLM. Odrzucono również blokowanie pierwszego podsumowania do czasu ustalenia ról. Przywróciłoby to odrzuconą opcję z D3.
 
-### D7. Search and the assistant go through our API
+### D7. Wyszukiwanie i asystent przechodzą przez nasze API
 
-**Chosen.** The access check and the name resolution happen before the model sees text. The model receives quotes, speaker ids, and roles. It does not receive the mapping. The response is labeled with names only for the caller who passed the access check.
+**Wybrano.** Sprawdzenie dostępu i rozwiązanie nazw następują przed zobaczeniem tekstu przez model. Model otrzymuje cytaty, identyfikatory mówców i role. Nie otrzymuje przypisań. Odpowiedź jest opatrywana nazwami wyłącznie dla wywołującego, który przeszedł sprawdzenie dostępu.
 
-**Why.** The assignment requires that search and the assistant do not reveal a meeting to someone who should not see it. A model with a company-wide corpus and a name in the question will not enforce that.
+**Dlaczego.** Zadanie wymaga, aby wyszukiwanie i asystent nie ujawniały spotkania osobie, która nie powinna go widzieć. Model z firmowym korpusem i nazwą w pytaniu nie wyegzekwuje tego ograniczenia.
 
-**Advantages.** One place enforces access. Ambiguous names are a question to the user, not a guess. Unmapped speech is excluded on purpose and the UI can say why.
+**Zalety.** Jedno miejsce egzekwuje dostęp. Niejednoznaczne nazwy stają się pytaniem do użytkownika, a nie zgadywaniem. Nieprzypisane wypowiedzi są celowo wykluczane, a interfejs może wyjaśnić dlaczego.
 
-**Disadvantages.** More application code than "embed all transcripts and ask". The assistant cannot answer "what did the client say" for a speaker nobody mapped, even if the words are in the database.
+**Wady.** Więcej kodu aplikacji niż w rozwiązaniu „zindeksuj wszystkie transkrypcje i zapytaj”. Asystent nie może odpowiedzieć „co powiedział klient” w odniesieniu do mówcy, którego nikt nie przypisał, nawet jeśli słowa znajdują się w bazie.
 
-**Risks.**
+**Ryzyka.**
 
-- A later prompt builder "helpfully" adds participant names. Impact: high. It deletes D5. Mitigation: a test on the outbound payload. No display name from the person table. No email.
-- The model attributes a quote to the wrong id. Impact: medium. Mitigation: the API selects the segments. The model summarizes those quotes. It does not search the whole company.
+- Późniejszy budowniczy promptu „pomocnie” dodaje nazwy uczestników. Wpływ: wysoki. Kasuje to D5. Ograniczenie: test ładunku wychodzącego. Żadnej nazwy wyświetlanej z tabeli osób. Żadnego adresu e-mail.
+- Model przypisuje cytat do niewłaściwego identyfikatora. Wpływ: średni. Ograniczenie: segmenty wybiera API. Model streszcza te cytaty. Nie przeszukuje całej firmy.
 
-**Rejected.** Full-text search over a transcript that already contains names. Looks simpler. It still needs the access filter, and it matches the word "Bartek" when the question is not about that person.
+**Odrzucono.** Wyszukiwanie pełnotekstowe w transkrypcji zawierającej już nazwy. Wygląda prościej. Nadal wymaga filtra dostępu i dopasuje słowo „Bartek”, gdy pytanie nie dotyczy tej osoby.
 
-### D8. Voice profiles and automatic suggestions wait
+### D8. Profile głosowe i automatyczne sugestie poczekają
 
-**Chosen.** Not in the first version: a voice profile built from earlier recordings, suggestions from a name spoken in the text, and suggestions from the time a participant joined.
+**Wybrano.** W pierwszej wersji nie ma profilu głosowego zbudowanego na podstawie wcześniejszych nagrań, sugestii wynikających z nazwy wypowiedzianej w tekście ani sugestii wynikających z czasu dołączenia uczestnika.
 
-**Why.** A voice template used to recognize a person is biometric data. Under GDPR that is a special category when the purpose is unique identification. Employee consent is a weak basis, because it is hard to treat as voluntary. This needs a lawyer before any recording is enrolled. Name-in-text and join-time hints are not biometric, and they are still wrong often enough that a human must confirm them. They can be added later on the same screen, without a new data model. The first version should not depend on them.
+**Dlaczego.** Szablon głosu używany do rozpoznawania osoby jest daną biometryczną. Zgodnie z GDPR jest szczególną kategorią danych, gdy celem jest jednoznaczna identyfikacja. Zgoda pracownika jest słabą podstawą, ponieważ trudno uznać ją za dobrowolną. Przed zapisaniem jakiegokolwiek nagrania do takiego profilu potrzebna jest opinia prawnika. Wskazówki z nazwy w tekście i czasu dołączenia nie są biometryczne, ale wystarczająco często bywają błędne, aby człowiek musiał je potwierdzić. Można je później dodać na tym samym ekranie bez nowego modelu danych. Pierwsza wersja nie powinna od nich zależeć.
 
-**Advantages.** The first version does not create a voice database. The mapping screen does not have to change when suggestions arrive. They would show up as a pre-selected row, still confirmed by a click.
+**Zalety.** Pierwsza wersja nie tworzy bazy głosów. Ekran przypisywania nie musi się zmieniać, gdy pojawią się sugestie. Byłyby wyświetlane jako wstępnie wybrany wiersz, nadal wymagający potwierdzenia kliknięciem.
 
-**Disadvantages.** Every meeting needs the human step. Returning clients are labeled by hand every time.
+**Wady.** Każde spotkanie wymaga udziału człowieka. Powracający klienci za każdym razem są oznaczani ręcznie.
 
-**Risks.**
+**Ryzyka.**
 
-- Someone treats "we will add voice matching" as a promise that unlabeled meetings will fix themselves. Impact: medium. Mitigation: this record says the opposite. Ids are the accepted fallback.
-- Join time is a strong hint only when someone arrives or leaves mid-call. When everyone stays from the start, the signal is empty. Impact: low, and it is why this is not in version one.
+- Ktoś traktuje „dodamy dopasowywanie głosu” jako obietnicę, że nieoznaczone spotkania naprawią się same. Wpływ: średni. Ograniczenie: ten rejestr mówi coś przeciwnego. Identyfikatory są zaakceptowanym wariantem awaryjnym.
+- Czas dołączenia jest silną wskazówką tylko wtedy, gdy ktoś przychodzi lub wychodzi w trakcie rozmowy. Gdy wszyscy są obecni od początku, sygnał jest pusty. Wpływ: niski, i dlatego rozwiązania nie ma w pierwszej wersji.
 
-**Rejected for the first version, kept as later work.** See section 5. Also rejected, firmly: enrolling a voice without a separate decision from the legal review.
+**Odrzucono w pierwszej wersji, zachowano jako późniejszą pracę.** Zob. sekcję 5. Stanowczo odrzucono także rejestrowanie głosu bez osobnej decyzji wynikającej z przeglądu prawnego.
 
-## 4. Questions to ask before building
+## 4. Pytania przed rozpoczęciem budowy
 
-Each question says what I would do with the answer. None of these were decided in this record except where a section above already locked a behavior.
+Każde pytanie mówi, co zrobiłbym z odpowiedzią. Żadnego z nich nie rozstrzygnięto w tym rejestrze, poza miejscami, w których wcześniejsza sekcja już ustaliła zachowanie.
 
-### Q1. Can mapping speakers be a manual company procedure?
+### Q1. Czy przypisywanie mówców może być ręczną procedurą firmową?
 
-I would ask the people who run client meetings, not only engineering. The software treats the step as expected and allows skip.
+Zapytałbym osoby prowadzące spotkania z klientami, nie tylko zespół techniczny. Oprogramowanie traktuje ten krok jako oczekiwany i pozwala go pominąć.
 
-- If yes, ids stay the fallback and the first version does not need voice profiles or suggestions.
-- If no, most meetings will stay on ids, search by name will miss them, and D8 moves forward. I would still not block publication.
+- Jeśli tak, identyfikatory pozostają rozwiązaniem awaryjnym, a pierwsza wersja nie potrzebuje profili głosowych ani sugestii.
+- Jeśli nie, większość spotkań zostanie przy identyfikatorach, wyszukiwanie po nazwie ich nie znajdzie, a D8 przesuwa się do przodu. Nadal nie blokowałbym publikacji.
 
-### Q2. What monthly budget is available for running this?
+### Q2. Jaki miesięczny budżet jest dostępny na uruchomienie tego rozwiązania?
 
-Include ASR, the LLM, storage, and the time to watch Meet API changes. About 300 hours of audio a month is the volume in `docs/zadanie.md`.
+Uwzględnić ASR, LLM, przechowywanie oraz czas na śledzenie zmian Meet API. Około 300 godzin audio miesięcznie to wolumen z `docs/zadanie.md`.
 
-- A tight budget pushes toward one external ASR API and rules out any bot vendor.
-- A budget that allows a GPU, or a strong preference that audio not leave the company, pushes toward self-hosted ASR. The speaker-id design does not change.
-- The second LLM call in D6 has to fit this number. If it does not, regenerate only task owners, not the whole narrative.
+- Ciasny budżet pcha w stronę jednego zewnętrznego API ASR i wyklucza dostawcę botów.
+- Budżet pozwalający na GPU albo silna preferencja, aby audio nie opuszczało firmy, pcha w stronę ASR hostowanego u nas. Projekt identyfikatorów mówców się nie zmienia.
+- Drugie wywołanie LLM z D6 musi zmieścić się w tej kwocie. Jeśli nie, ponownie generować tylko właścicieli zadań, a nie całą narrację.
 
-The model itself is a separate decision (Part A, question 4). This record does not pick one.
+Sam model jest osobną decyzją (część A, pytanie 4). Ten rejestr żadnego nie wybiera.
 
-### Q3. Questions for a lawyer
+### Q3. Pytania do prawnika
 
-I am not treating "sending a surname is illegal" as a conclusion. A surname, a first name, a role, and a speaker id whose key we hold are all personal data. What changes the design is the answer to the following.
+Nie traktuję zdania „wysłanie nazwiska jest nielegalne” jako wniosku. Nazwisko, imię, rola i identyfikator mówcy, którego klucz trzymamy u siebie, są danymi osobowymi. Projekt zmienia odpowiedź na poniższe pytania.
 
-- What is the legal basis for employees, and for clients who are not our employees? Can employee consent be treated as voluntary?
-- What must participants be told before recording, including that an external model will read the words?
-- Is the LLM vendor a processor? Do we have a data processing agreement, an EU region, a block on training on our data, and a stated log retention? If the vendor is outside the EEA, what transfer tool applies?
-- Does sending ids plus roles count as pseudonymization, and does that change anything we are allowed to do? My current assumption: it reduces what the vendor sees, and it does not make the transcript anonymous.
-- How long may we keep the audio, the transcript, the summary, and the mapping? Audio must outlive the mapping window (Q6).
-- Voice profiles in a later version: Article 9, a DPIA, and whether employee consent is even available. A "no" here deletes section 5's voice item permanently.
-- If Q12 leads us to add a person who was not a Meet participant: that record is created from an employee's memory, not from the data subject. Is that acceptable under the same basis as the transcript?
+- Jaka jest podstawa prawna dla pracowników i dla klientów, którzy nie są naszymi pracownikami? Czy zgodę pracownika można uznać za dobrowolną?
+- Co trzeba powiedzieć uczestnikom przed nagrywaniem, w tym że zewnętrzny model przeczyta słowa?
+- Czy dostawca LLM jest procesorem? Czy mamy umowę powierzenia, region UE, blokadę trenowania na naszych danych i określoną retencję logów? Jeśli dostawca jest poza EOG, jakie narzędzie transferu ma zastosowanie?
+- Czy wysyłanie identyfikatorów i ról jest pseudonimizacją i czy zmienia to, co wolno nam robić? Moje obecne założenie: zmniejsza to, co widzi dostawca, i nie czyni transkrypcji anonimową.
+- Jak długo możemy trzymać audio, transkrypcję, podsumowanie i przypisanie? Audio musi przetrwać okno przypisywania (Q6).
+- Profile głosowe w późniejszej wersji: art. 9, DPIA i czy zgoda pracownika w ogóle jest dostępna. „Nie” w tym miejscu trwale usuwa pozycję głosu z sekcji 5.
+- Jeśli Q12 prowadzi do dodania osoby, która nie była uczestnikiem Meet: ten rekord powstaje z pamięci pracownika, a nie od osoby, której dane dotyczą. Czy jest to dopuszczalne na tej samej podstawie co transkrypcja?
 
-Answers change what may leave the company, how long each artifact lives, and whether D8's voice item can exist. They do not, by themselves, force names into the prompt. Data minimization still favors ids if the model can do the job without names.
+Odpowiedzi zmieniają to, co może opuścić firmę, jak długo żyje każdy artefakt i czy pozycja głosu z D8 może istnieć. Same z siebie nie wymuszają nazw w prompcie. Minimalizacja danych nadal faworyzuje identyfikatory, jeśli model może wykonać zadanie bez nazw.
 
-### Q4. May a meeting be shared with someone who was not on it?
+### Q4. Czy spotkanie można udostępnić osobie, która w nim nie uczestniczyła?
 
-For example, a colleague who joins the client project later.
+Na przykład kolega, który później dołącza do projektu klienta.
 
-- If no, access stays "internal attendees, plus whoever the product already treats as allowed to see that client." Mapping rights stay tied to attendance. Simpler, and it matches D3.
-- If yes, sharing is an explicit grant, not a side effect of being in the company. The new person can read. I would not let them map speakers unless they were on the call, because they cannot judge the voice. Q4 changes the access model either way. It is not built in the first version until Vinseo answers.
+- Jeśli nie, dostęp zostaje przy „wewnętrznych uczestnikach oraz osobach, które produkt już traktuje jako uprawnione do tego klienta”. Prawo do przypisywania zostaje związane z obecnością. Prostsze i zgodne z D3.
+- Jeśli tak, udostępnienie jest jawnym nadaniem, a nie skutkiem ubocznym pracy w firmie. Nowa osoba może czytać. Nie pozwoliłbym jej przypisywać mówców, jeśli nie była na rozmowie, bo nie oceni głosu. Q4 zmienia model dostępu w obie strony. W pierwszej wersji tego nie budujemy, dopóki Vinseo nie odpowie.
 
-### Q5. Who is allowed to record, and how does the client find out?
+### Q5. Kto może nagrywać i jak klient się o tym dowiaduje?
 
-Is Meet's explicit-consent prompt turned on by the admin? Who is allowed to start a recording when host management is on?
+Czy administrator włączył w Meet monit o wyraźnej zgodzie? Kto może rozpocząć nagrywanie, gdy zarządzanie przez hosta jest włączone?
 
-- If consent is required in Meet, the pipeline can trust that capture already had an on-screen acceptance. We still need a place to record a refusal that happens outside Meet.
-- If anyone on the domain can record without a prompt, the product needs its own rule before it fetches the file. Fetching everything `FILE_GENERATED` would process meetings the company did not mean to capture.
+- Jeśli zgoda jest wymagana w Meet, potok może ufać, że przechwytywanie miało już akceptację na ekranie. Nadal potrzebujemy miejsca na zapisanie odmowy, która dzieje się poza Meet.
+- Jeśli ktokolwiek w domenie może nagrywać bez monitu, produkt potrzebuje własnej reguły, zanim pobierze plik. Pobieranie wszystkiego w stanie `FILE_GENERATED` przetworzyłoby spotkania, których firma nie chciała przechwycić.
 
-### Q6. How long is each artifact kept?
+### Q6. Jak długo przechowywany jest każdy artefakt?
 
-I need a duration for the MP4 copy, the segments, the summary, the tasks, and the mapping.
+Potrzebuję czasu dla kopii MP4, segmentów, podsumowania, zadań i przypisania.
 
-- If audio is deleted before people are expected to finish mapping, late mapping falls back to quotes and will be worse. I would set audio retention at least as long as the mapping window.
-- A short transcript retention conflicts with "what did we promise this client two weeks ago" if "two weeks" is the real horizon. The assignment's example is two weeks. The real horizon may be longer. The answer sets the index, not the speaker design.
+- Jeśli audio zostanie usunięte, zanim ludzie zdążą dokończyć przypisywanie, późne przypisywanie oprze się na cytatach i będzie gorsze. Ustawiłbym retencję audio co najmniej tak długą jak okno przypisywania.
+- Krótka retencja transkrypcji kłóci się z pytaniem „co obiecaliśmy temu klientowi dwa tygodnie temu”, jeśli „dwa tygodnie” jest prawdziwym horyzontem. Przykład z zadania to dwa tygodnie. Prawdziwy horyzont może być dłuższy. Odpowiedź ustala indeks, a nie projekt mówców.
 
-### Q7. Confidential meetings, and someone who refuses to be recorded
+### Q7. Spotkania poufne i osoba, która odmawia nagrywania
 
-- A meeting marked confidential should not be fetched, or should be fetched only into a tighter access list. I need the signal: a calendar flag, a Meet label, or a person clicking "do not import" before the file is downloaded.
-- A person who refuses: they leave the call, or the host stops recording. If a recording already exists and the refusal comes later, we need a delete that removes the MP4 copy, the segments, the summary, and the mapping, including derived tasks. Backups have to follow the same rule. I would not keep a "speaker 2" transcript of a meeting that must be deleted.
-- If the answer is "record everything and sort it out later", the risk moves onto the access rules and onto Q3.
+- Spotkania oznaczonego jako poufne nie należy pobierać albo należy je pobrać tylko do ciaśniejszej listy dostępu. Potrzebuję sygnału: flagi w kalendarzu, etykiety Meet albo kliknięcia „nie importuj”, zanim plik zostanie pobrany.
+- Osoba, która odmawia: wychodzi z rozmowy albo host zatrzymuje nagrywanie. Jeśli nagranie już istnieje, a odmowa przychodzi później, potrzebujemy usunięcia, które zdejmuje kopię MP4, segmenty, podsumowanie i przypisanie, w tym zadania pochodne. Backupy muszą iść tą samą regułą. Nie trzymałbym transkrypcji „speaker 2” ze spotkania, które trzeba usunąć.
+- Jeśli odpowiedź brzmi „nagrywaj wszystko i rozstrzygnij później”, ryzyko przenosi się na reguły dostępu i na Q3.
 
-### Q8. Which Workspace edition, and is auto-recording on?
+### Q8. Jaka jest wersja Workspace i czy automatyczne nagrywanie jest włączone?
 
-Business Standard is the floor for recording (fact, section 1). I need the edition Vinseo actually has, and whether auto-recording can be turned on for internal and client meetings.
+Business Standard jest dolną granicą nagrywania (fakt, sekcja 1). Potrzebuję wersji, którą Vinseo naprawdę ma, oraz informacji, czy automatyczne nagrywanie można włączyć dla spotkań wewnętrznych i z klientami.
 
-- If auto-recording is on, the pipeline sees most meetings and Q5 becomes the main control.
-- If people must press record, many meetings will be missing. The product should show "no recording" rather than an empty transcript. I would not build a bot to fill that gap unless Q1 and Q2 both change.
+- Jeśli automatyczne nagrywanie jest włączone, potok widzi większość spotkań, a Q5 staje się główną kontrolą.
+- Jeśli ludzie muszą nacisnąć nagrywanie, wielu spotkań będzie brakować. Produkt powinien pokazać „brak nagrania”, a nie pustą transkrypcję. Nie budowałbym bota, żeby wypełnić tę lukę, chyba że zmienią się zarówno Q1, jak i Q2.
 
-### Q9. How should a regenerated summary be shown?
+### Q9. Jak powinno być prezentowane ponownie wygenerowane podsumowanie?
 
-Regeneration after a role change is decided (D6). Still open: does the new text replace the published summary in place, or does the user see it as a new version? And does Q2 allow the extra call?
+Ponowne generowanie po zmianie roli jest rozstrzygnięte (D6). Nadal otwarte: czy nowy tekst zastępuje opublikowane podsumowanie w miejscu, czy użytkownik widzi je jako nową wersję? I czy Q2 pozwala na dodatkowe wywołanie?
 
-- Silent replace is simpler and will confuse someone who already forwarded the old wording.
-- A version, or a short "updated after speakers were assigned", keeps the audit trail and costs a bit of UI.
-- If the budget forbids the second call, the first summary stays role-blind and only the task owner labels update from the mapping, with no new prose.
+- Cicha podmiana jest prostsza i zmyli osobę, która już przekazała stare sformułowanie.
+- Wersja albo krótka informacja „zaktualizowano po przypisaniu mówców” zachowuje ślad audytu i kosztuje trochę interfejsu.
+- Jeśli budżet zabrania drugiego wywołania, pierwsze podsumowanie zostaje ślepe na role, a etykiety właścicieli zadań aktualizują się z przypisania, bez nowej prozy.
 
-### Q10. How often is a conference room or a phone participant on the call?
+### Q10. Jak często w rozmowie uczestniczy sala konferencyjna albo uczestnik telefoniczny?
 
-- If rooms and phone dial-ins are rare, the first version's "skip the extra speaker" is enough.
-- If they are common, diarization quality matters more, and merge, split, or a hand-added guest (section 5) move up as soon as the MVP shows unlabeled speakers that a human could have named.
+- Jeśli sale i połączenia telefoniczne są rzadkie, „pomiń dodatkowego mówcę” z pierwszej wersji wystarcza.
+- Jeśli są częste, jakość diarization ma większe znaczenie, a scalanie, dzielenie albo ręcznie dodany gość (sekcja 5) przesuwają się w górę, gdy tylko MVP pokaże nieoznaczonych mówców, których człowiek mógłby nazwać.
 
-### Q11. An employee leaves. Who can still map their meetings?
+### Q11. Pracownik odchodzi. Kto nadal może przypisywać jego spotkania?
 
-The mapping rows stay. Their login goes away.
+Wiersze przypisań zostają. Jego login znika.
 
-- If any remaining internal attendee can map, unlabeled meetings are recoverable.
-- If nobody else attended from the company (a one-to-one that only the leaver sat on), the meeting stays on ids forever unless Q4 allows someone else to map. I would rather leave the ids than let a stranger assign voices they never heard.
+- Jeśli dowolny pozostały wewnętrzny uczestnik może przypisywać, nieoznaczone spotkania da się odzyskać.
+- Jeśli nikt inny z firmy nie uczestniczył (rozmowa jeden na jeden, na której siedział tylko odchodzący), spotkanie zostaje przy identyfikatorach na zawsze, chyba że Q4 pozwoli komuś innemu przypisywać. Wolę zostawić identyfikatory, niż pozwolić obcej osobie przypisać głosy, których nigdy nie słyszała.
 
-### Q12. Can more than one person join from a single Google account?
+### Q12. Czy więcej niż jedna osoba może dołączyć z jednego konta Google?
 
-For example, two accounts on the Meet list, `jan@gmail.com` and `bartek@gmail.com`, while Bartek and Paweł both use Bartek's account. Diarization then returns three speakers. Only two people can be picked from the Meet list. The third speaker has no account to assign.
+Na przykład dwa konta na liście Meet, `jan@gmail.com` i `bartek@gmail.com`, podczas gdy Bartek i Paweł obaj używają konta Bartka. Diarization zwraca wtedy trzech mówców. Z listy Meet można wybrać tylko dwie osoby. Trzeci mówca nie ma konta do przypisania.
 
-- If this does not happen, or happens rarely, the first version is enough. That speaker stays an id. Skip is the honest result. I would not build a "add a guest" action.
-- If this is normal (shared laptops, a client sitting with an employee, a room joined from one account), a later version lets the mapper add Paweł, who was not a Meet participant, and assign him to that one speaker. The other speakers still map to Jan and Bartek. Role defaults to `client`, and the mapper can change it. Q3 still has to allow creating that person record.
-- The answer does not by itself add merge or split. Those repair a bad model. This question is only about a real extra human who was never a Meet participant.
+- Jeśli to się nie zdarza albo zdarza się rzadko, pierwsza wersja wystarcza. Ten mówca zostaje identyfikatorem. Pominięcie jest uczciwym wynikiem. Nie budowałbym akcji „dodaj gościa”.
+- Jeśli jest to normalne (współdzielone laptopy, klient siedzący z pracownikiem, sala dołączona z jednego konta), późniejsza wersja pozwala przypisującemu dodać Pawła, który nie był uczestnikiem Meet, i przypisać go do tego jednego mówcy. Pozostali mówcy nadal mapują się na Jana i Bartka. Rola domyślnie to `client`, a przypisujący może ją zmienić. Q3 nadal musi pozwolić utworzyć ten rekord osoby.
+- Odpowiedź sama z siebie nie dodaje scalania ani dzielenia. Te operacje naprawiają zły model. To pytanie dotyczy wyłącznie prawdziwej dodatkowej osoby, która nigdy nie była uczestnikiem Meet.
 
-## 5. Later versions, after the MVP
+## 5. Późniejsze wersje, po MVP
 
-Collect, from real use: the share of meetings that get mapped, how often a mapping is corrected, and how often a task owner is wrong. Then consider, in this order:
+Zbierać z rzeczywistego użycia: udział spotkań, które dostają przypisanie, jak często przypisanie jest korygowane i jak często właściciel zadania jest błędny. Potem rozważyć, w tej kolejności:
 
-1. **Reminders and a completeness marker.** The meeting shows which speakers have no person. A nudge to attendees who have not mapped. This does not change the model. It tests whether the procedure in Q1 is real.
-2. **Suggestions that are not biometric.** A name spoken in a segment, and a participant who joins at the same time a new voice starts. Shown as a suggestion on the existing screen. A click still writes the mapping. Join time does nothing when everyone is present the whole time.
-3. **Share with a colleague who was not on the call.** Only if Q4 is yes. Read access and mapping access are separate.
-4. **Voice profiles.** Only after Q3 allows it. High score threshold. Below the threshold the speaker stays unlabeled. The profile is stored only after a human confirms a clean segment, not from a mixed one. A wrong profile poisons later meetings, so automatic enrollment is out.
-5. **A second diarization pass.** Only with a way to keep existing mappings attached to time ranges when ids change.
-6. **Merge, split, and mixed segments.** Only if real meetings show the transcription model is not good enough. Merge moves every segment of one speaker id onto another. Split creates a new speaker id and moves selected segments. A segment where two people talk at once is marked mixed and is not used as one person's task quote. Backchannels are not part of this work. The transcription model already drops them.
-7. **A guest who was not a Meet participant.** Only if Q12 says several people join through one Google account, and Q3 allows the record. The mapper adds the person and assigns them to one existing speaker. Creating the person does not move words by itself.
+1. **Przypomnienia i znacznik kompletności.** Spotkanie pokazuje, którzy mówcy nie mają osoby. Ponaglenie dla uczestników, którzy nie przypisali. To nie zmienia modelu. Sprawdza, czy procedura z Q1 jest prawdziwa.
+2. **Sugestie, które nie są biometryczne.** Nazwa wypowiedziana w segmencie oraz uczestnik, który dołącza w chwili, gdy zaczyna się nowy głos. Pokazane jako sugestia na istniejącym ekranie. Kliknięcie nadal zapisuje przypisanie. Czas dołączenia nic nie daje, gdy wszyscy są obecni przez cały czas.
+3. **Udostępnienie koledze, którego nie było na rozmowie.** Tylko jeśli Q4 brzmi „tak”. Dostęp do odczytu i dostęp do przypisywania są osobne.
+4. **Profile głosowe.** Dopiero po zgodzie z Q3. Wysoki próg wyniku. Poniżej progu mówca zostaje nieoznaczony. Profil jest zapisywany dopiero po tym, jak człowiek potwierdzi czysty segment, a nie mieszany. Zły profil zatruwa późniejsze spotkania, więc automatyczny zapis jest wykluczony.
+5. **Drugie przejście diarization.** Tylko ze sposobem utrzymania istniejących przypisań przy zakresach czasu, gdy identyfikatory się zmieniają.
+6. **Scalanie, dzielenie i segmenty mieszane.** Tylko jeśli prawdziwe spotkania pokażą, że model transkrypcji nie jest wystarczająco dobry. Scalanie przenosi każdy segment jednego identyfikatora mówcy na inny. Dzielenie tworzy nowy identyfikator mówcy i przenosi wybrane segmenty. Segment, w którym dwie osoby mówią naraz, jest oznaczany jako mieszany i nie jest używany jako cytat zadania jednej osoby. Backchanneling nie jest częścią tej pracy. Model transkrypcji już go usuwa.
+7. **Gość, który nie był uczestnikiem Meet.** Tylko jeśli Q12 mówi, że kilka osób dołącza przez jedno konto Google, a Q3 pozwala na ten rekord. Przypisujący dodaje osobę i przypisuje ją do jednego istniejącego mówcy. Samo utworzenie osoby nie przenosi słów.
 
-Not planned unless the facts in section 1 change: a Meet bot, and native Meet transcript entries as the Polish source. If Google adds Polish to saved transcripts, transcript entries become the first choice, because the participant id is Meet's, not a guess from the audio.
+Nieplanowane, dopóki nie zmienią się fakty z sekcji 1: bot Meet oraz natywne wpisy transkrypcji Meet jako polskie źródło. Jeśli Google doda polski do zapisanych transkrypcji, wpisy transkrypcji stają się pierwszym wyborem, ponieważ identyfikator uczestnika pochodzi od Meet, a nie ze zgadywania na podstawie audio.
 
-## 6. How AI was used
+## 6. Jak użyto AI
 
-AI (Cursor, in this chat) was used to research Google's APIs and to lay out options with advantages, disadvantages, and risks. I compared the options and made every decision in sections 3 and 4. I did not treat the model's preference as the decision.
+AI (Cursor, w tej rozmowie) użyto do zbadania API Google oraz przedstawienia opcji wraz z zaletami, wadami i ryzykami. Porównałem opcje i podjąłem każdą decyzję z sekcji 3 i 4. Preferencji modelu nie traktowałem jako decyzji.
 
-### What I asked the model to do
+### O co poprosiłem model
 
-Research and source checks:
+Badanie i sprawdzanie źródeł:
 
-- How to fetch Google Meet recordings, and whether the API can split speech by user.
-- Whether a Polish speaker-attributed transcript is available from Meet, or whether we have to transcribe the audio ourselves.
-- Whether the Meet Media API is actually unavailable, with a source.
-- What else could produce a separate audio track per participant.
+- Jak pobierać nagrania Google Meet i czy API może podzielić wypowiedzi według użytkowników.
+- Czy w Meet dostępna jest polska transkrypcja przypisana do mówców, czy też musimy samodzielnie transkrybować audio.
+- Czy Meet Media API jest rzeczywiście niedostępne, wraz ze źródłem.
+- Co jeszcze mogłoby dać osobną ścieżkę audio na uczestnika.
 
-Comparisons, after I rejected a direction:
+Porównania po odrzuceniu przeze mnie kierunku:
 
 - "Porównaj to podejście i określ ryzyka, zalety i wady oraz inne możliwości."
 - "Porównaj je z opcją podmiany identyfikatorów również w streszczeniach i transkrypcjach. Jeśli chodzi o wady: jak można sobie z nimi poradzić i jak duży mają impact."
-- A first-name-only prompt versus opaque ids, including the case of two people with the same first name and the same surname initial.
+- Prompt zawierający wyłącznie imię w porównaniu z niejawnymi identyfikatorami, w tym przypadek dwóch osób o tym samym imieniu i tej samej pierwszej literze nazwiska.
 
-### What I verified, because the first answer was not enough
+### Co zweryfikowałem, ponieważ pierwsza odpowiedź nie wystarczyła
 
-- The Meet Media API looked like the best way to get per-person audio. I asked for a source check. The release notes of 2026-10-28 say it is deprecated and the endpoints go away on 2027-01-15. That killed the option. The earlier "no new signups" banner was incomplete. The shutdown date is the fact that matters.
-- Polish support for native transcripts. I did not take the model's summary. The Google Meet help page, checked on 2026-10-30, lists eight languages and Polish is not one of them.
+- Meet Media API wyglądało na najlepszy sposób uzyskania audio na osobę. Poprosiłem o sprawdzenie źródła. Informacje o wydaniu z 2026-10-28 mówią, że API jest wycofane, a endpointy znikają 2027-01-15. To zabiło tę opcję. Wcześniejszy baner „brak nowych rejestracji” był niekompletny. Datą, która ma znaczenie, jest data wyłączenia.
+- Obsługa polskiego w natywnych transkrypcjach. Nie przyjąłem streszczenia modelu. Strona pomocy Google Meet, sprawdzona 2026-10-30, wymienia osiem języków i polskiego wśród nich nie ma.
 
-### What I changed relative to the model's proposals
+### Co zmieniłem względem propozycji modelu
 
-- Mapping is not limited to the organizer. Any internal attendee with access to the recording can do it. The model had centered the organizer. I changed it because the organizer is often absent.
-- Mapping is a company procedure. Ids are the backup when someone skips it, not the normal face of the product.
-- A guest who was not a Meet participant stays out of the first version. I first treated "add Paweł, who sat next to Bartek's account" as part of mapping. I then moved it to a later version, because I do not yet know whether one Google account is ever used by two people (Q12).
-- The role goes to the LLM, and it is set in the same step as the person. The first summary uses `unknown`. A role change triggers a new summary.
-- Names in the prompt were rejected after comparing full names, first names, first names with an initial, and ids. The model had spelled out the flaws. The choice to keep names only in our API is mine.
-- Merge, split, and mixed are not in the first version. The model proposed them as the manual fix for bad diarization. I kept the design for a later version, and I left them out of the MVP in case the transcription model is good enough. Backchannels are the model's job, not a filter on the mapping screen.
+- Przypisywanie nie jest ograniczone do organizatora. Może je wykonać każdy wewnętrzny uczestnik mający dostęp do nagrania. Model koncentrował się na organizatorze. Zmieniłem to, ponieważ organizator często jest nieobecny.
+- Przypisywanie jest procedurą firmową. Identyfikatory są rozwiązaniem awaryjnym, gdy ktoś pominie procedurę, a nie zwykłym obliczem produktu.
+- Gość, który nie był uczestnikiem Meet, pozostaje poza pierwszą wersją. Początkowo traktowałem „dodaj Pawła, który siedział obok konta Bartka” jako część przypisywania. Następnie przeniosłem to do późniejszej wersji, ponieważ nie wiem jeszcze, czy jedno konto Google bywa używane przez dwie osoby (Q12).
+- Rola trafia do LLM i jest ustawiana w tym samym kroku co osoba. Pierwsze podsumowanie używa `unknown`. Zmiana roli uruchamia nowe podsumowanie.
+- Nazwy w prompcie odrzucono po porównaniu pełnych nazw, imion, imion z inicjałem oraz identyfikatorów. Model szczegółowo opisał wady tych wariantów. Decyzja, aby nazwy pozostawały wyłącznie w naszym API, należy do mnie.
+- Scalanie, dzielenie i oznaczanie jako mixed nie należą do pierwszej wersji. Model zaproponował je jako ręczną naprawę złego diarization. Zachowałem ten projekt na późniejszą wersję i pominąłem go w MVP na wypadek, gdyby model transkrypcji był wystarczająco dobry. Backchanneling jest zadaniem modelu, a nie filtrem na ekranie przypisywania.
 
-### Example prompts from this chat
+### Przykładowe prompty z tej rozmowy
 
-Research and a demand for sources:
+Badanie i żądanie podania źródeł:
 
 > W jaki sposób mogę pobierać nagrania z google meet? Da się to robić poprzez api i żeby był podział na wypowiedzi konkretnych użytkowników?
 
@@ -449,82 +449,82 @@ Research and a demand for sources:
 
 > To media api jest na 100% niedostępne? zweryfikuj tą informację i podaj źródło.
 
-A request for options rather than a single answer:
+Prośba o opcje zamiast jednej odpowiedzi:
 
 > Jakie są inne opcje uzyskania osobnych ścieżek audio per uczestnik? Np. poprzez bota dołączającego do spotkania?
 
-A comparison, including impact:
+Porównanie obejmujące wpływ:
 
 > Porównaj je z opcją podmiany identyfikatorów również w streszczeniach i transkrypcjach, jakie wady i zalety mają te dwa rozwiązania względem siebie. Jeśli chodzi o wady - jak można sobie z nimi poradzić, jak duży mają impact na działanie systemu?
 
-Corrections I sent back, which the model then had to fold in:
+Korekty, które odesłałem i które model musiał następnie uwzględnić:
 
 > Przypisywanie ról dzieje się równolegle z przypisaniem uczestnika spotkania do identyfikatora mówcy.
 
 > Każdy pracownik firmy, który był uczestnikiem spotkania może wykonać dopasowanie, nie tylko organizator.
 
-## 7. Part A, question 1: where recordings come from, and the smallest access that works
+## 7. Part A, pytanie 1: skąd pochodzą nagrania i jaki najmniejszy dostęp wystarczy
 
-**Source.** The MP4 that Meet already stores for the organizer. Discovery and metadata come from the Meet REST API (`conferenceRecords.list` and `conferenceRecords.recordings`). Bytes come from the Drive API (`files.get` with `alt=media`) using `driveDestination.file`. We do not use Meet's own transcript as the Polish text. We do not join the meeting.
+**Źródło.** MP4, który Meet już zapisuje u organizatora. Odkrywanie i metadane pochodzą z Meet REST API (`conferenceRecords.list` i `conferenceRecords.recordings`). Bajty pochodzą z Drive API (`files.get` z `alt=media`) przy użyciu `driveDestination.file`. Nie używamy własnej transkrypcji Meet jako polskiego tekstu. Nie dołączamy do spotkania.
 
-**When a file is ready.** Subscribe with the Workspace Events API for recording-file events on the organizers we care about, or poll those organizers' conference records until the recording state is `FILE_GENERATED`. Polling is enough for a first version. Events cost less quota and less delay. Either way, do not download on `ENDED`. The file does not exist yet.
+**Kiedy plik jest gotowy.** Subskrybować Workspace Events API na zdarzenia pliku nagrania dla organizatorów, którzy nas interesują, albo odpytywać rekordy konferencji tych organizatorów, aż stan nagrania będzie `FILE_GENERATED`. Odpytywanie wystarcza na pierwszą wersję. Zdarzenia kosztują mniej limitu i dają mniejsze opóźnienie. W obu wariantach nie pobierać przy `ENDED`. Plik jeszcze wtedy nie istnieje.
 
-**Scopes, smallest set.**
+**Zakresy, najmniejszy zestaw.**
 
-- `https://www.googleapis.com/auth/meetings.space.readonly` to list conferences, recordings, and participants.
-- `https://www.googleapis.com/auth/drive.meet.readonly` to download files Meet created.
+- `https://www.googleapis.com/auth/meetings.space.readonly` do listowania konferencji, nagrań i uczestników.
+- `https://www.googleapis.com/auth/drive.meet.readonly` do pobierania plików utworzonych przez Meet.
 
-Not `drive.readonly`. That would expose the organizer's whole Drive. `drive.meet.readonly` is still a restricted scope. Google's verification and security assessment apply if the app is ever published beyond this one Workspace customer. For an internal app, an admin can grant the scopes to the service account.
+Nie `drive.readonly`. To odsłoniłoby cały Dysk organizatora. `drive.meet.readonly` nadal jest zakresem ograniczonym. Weryfikacja i ocena bezpieczeństwa Google mają zastosowanie, jeśli aplikacja kiedykolwiek zostanie opublikowana poza tym jednym klientem Workspace. Dla aplikacji wewnętrznej administrator może nadać te zakresy kontu usługi.
 
-**Who the app acts as.** A service account with domain-wide delegation, impersonating the meeting organizer. This is necessary because `conferenceRecords.list` only returns conferences that the caller organized. Impersonating one user does not reveal another user's meetings.
+**W czyim imieniu działa aplikacja.** Konto usługi z domain-wide delegation, impersonujące organizatora spotkania. Jest to konieczne, ponieważ `conferenceRecords.list` zwraca tylko konferencje zorganizowane przez wywołującego. Impersonacja jednego użytkownika nie ujawnia spotkań innego użytkownika.
 
-Delegation is limited to those two scopes. The application impersonates only Workspace users who organize recorded meetings, not every account in the domain. If those users sit in one organizational unit, the loop that picks users is limited to that unit. **Assumption:** domain-wide delegation itself is granted per scope for the domain. The organizational-unit limit is something we enforce by which users we impersonate, not a second Google scope. This should be confirmed in the admin console when the project exists.
+Delegacja jest ograniczona do tych dwóch zakresów. Aplikacja impersonuje tylko użytkowników Workspace, którzy organizują nagrywane spotkania, a nie każde konto w domenie. Jeśli ci użytkownicy siedzą w jednej jednostce organizacyjnej, pętla wybierająca użytkowników jest ograniczona do tej jednostki. **Założenie:** samo domain-wide delegation jest nadawane na zakres dla domeny. Ograniczenie do jednostki organizacyjnej wymuszamy tym, których użytkowników impersonujemy, a nie drugim zakresem Google. Należy to potwierdzić w konsoli administratora, gdy projekt będzie istniał.
 
-**What this still exposes.** For each impersonated organizer, the app can read Meet metadata and every Drive file Meet created for them, including meetings the product is not meant to import. Mitigations: impersonate only the organizers who should be in the system, download only recordings in `FILE_GENERATED` that the product has decided to import (Q5, Q7), keep the audio only for the retention window (Q6), and log every download with the conference id and the user we impersonated. Do not log the audio or the transcript in application logs.
+**Co to nadal odsłania.** Dla każdego impersonowanego organizatora aplikacja może czytać metadane Meet i każdy plik Dysku utworzony przez Meet, w tym spotkania, których produkt nie ma importować. Ograniczenia: impersonować tylko organizatorów, którzy mają być w systemie, pobierać tylko nagrania w stanie `FILE_GENERATED`, które produkt zdecydował się zaimportować (Q5, Q7), trzymać audio tylko przez okno retencji (Q6) i logować każde pobranie z identyfikatorem konferencji oraz użytkownikiem, którego impersonowaliśmy. Nie logować audio ani transkrypcji w logach aplikacji.
 
-**What we do not need.** Write access to Meet or Drive. The Media API scope. A bot account inside the meeting. Access to Gmail. A full Drive scope.
+**Czego nie potrzebujemy.** Dostępu do zapisu w Meet albo na Dysku. Zakresu Media API. Konta bota wewnątrz spotkania. Dostępu do Gmaila. Pełnego zakresu Dysku.
 
-## 8. Interview notes
+## 8. Notatki do rozmowy
 
-### What would make me change this
+### Co skłoniłoby mnie do zmiany
 
-- Google adds Polish to saved Meet transcripts, with the same participant-level entries the API already has for the eight supported languages. I would take those entries as the transcript and keep diarization as a fallback for meetings where transcription was not started. Mapping might become a check, not the primary way to learn who spoke.
-- Vinseo cannot require recording, and Q2 allows a supported way to capture audio. There is no supported way today. A bot would be a new decision, not a small patch.
-- The lawyer forbids sending the role, or the transcript text, to an external model. Then the LLM moves in-house or the summary becomes a template over the segments. The speaker-id boundary stays. It gets stricter, not looser.
-- Q1 comes back "no". Suggestions and, only with legal approval, voice profiles move up. The id fallback stays.
+- Google dodaje polski do zapisanych transkrypcji Meet, z tymi samymi wpisami na poziomie uczestnika, które API ma już dla ośmiu obsługiwanych języków. Wziąłbym te wpisy jako transkrypcję i zostawił diarization jako rozwiązanie awaryjne dla spotkań, na których transkrypcji nie uruchomiono. Przypisywanie mogłoby stać się sprawdzeniem, a nie głównym sposobem dowiadywania się, kto mówił.
+- Vinseo nie może wymagać nagrywania, a Q2 pozwala na obsługiwany sposób przechwytywania audio. Dziś nie ma obsługiwanego sposobu. Bot byłby nową decyzją, a nie małą poprawką.
+- Prawnik zabrania wysyłania roli albo tekstu transkrypcji do zewnętrznego modelu. Wtedy LLM przenosi się do firmy albo podsumowanie staje się szablonem nad segmentami. Granica identyfikatora mówcy zostaje. Robi się ciaśniejsza, nie luźniejsza.
+- Q1 wraca z odpowiedzią „nie”. Sugestie oraz, wyłącznie za zgodą prawną, profile głosowe przesuwają się w górę. Identyfikator jako rozwiązanie awaryjne zostaje.
 
-### What the first version deliberately does not do
+### Czego pierwsza wersja celowo nie robi
 
-- It does not join the meeting.
-- It does not send names or emails to the model.
-- It does not build a voice database.
-- It does not auto-assign a Meet account to a voice.
-- It does not block the summary on a human click.
-- It does not share a meeting with someone who was not on it (Q4).
-- It does not pick the ASR or LLM vendor. That is Part A question 4, and it depends on Q2 and Q3.
-- It does not merge speakers, split speakers, or mark a segment as mixed.
-- It does not add a person who was not a Meet participant. That waits on Q12.
+- Nie dołącza do spotkania.
+- Nie wysyła nazw ani adresów e-mail do modelu.
+- Nie buduje bazy głosów.
+- Nie przypisuje automatycznie konta Meet do głosu.
+- Nie blokuje podsumowania na kliknięciu człowieka.
+- Nie udostępnia spotkania osobie, której na nim nie było (Q4).
+- Nie wybiera dostawcy ASR ani LLM. To pytanie 4 części A i zależy od Q2 oraz Q3.
+- Nie scala mówców, nie dzieli mówców i nie oznacza segmentu jako mieszanego.
+- Nie dodaje osoby, która nie była uczestnikiem Meet. To czeka na Q12.
 
-### Edge cases from the assignment
+### Przypadki brzegowe z zadania
 
-| Situation in `docs/zadanie.md` | What this design does |
+| Sytuacja w `docs/zadanie.md` | Co robi ten projekt |
 | --- | --- |
-| A client does not agree to be recorded | Q5 and Q7. Prefer Meet's own consent prompt. If a recording must be removed, delete the file, the segments, the summary, the tasks, and the mapping. |
-| A confidential meeting | Q7. Do not import it, or import it into a tighter access list. The mapping screen never becomes a backdoor for people who cannot hear the recording. |
-| An employee leaves | Q11. Mapping history stays. Their login loses access. Another internal attendee can still map. If nobody else from the company was there, speakers stay ids. |
-| Search or the assistant is asked by someone who should not see the meeting | D7. Filter meetings before any model call. Do not put the mapping legend in the prompt. |
-| Two people talk over each other, or share one Google account | D4 and Q12. The first version leaves the extra speaker as an id. Merge, split, mixed, and a hand-added guest come later, only if real meetings need them. |
+| Klient nie zgadza się na nagrywanie | Q5 i Q7. Preferować własny monit zgody Meet. Jeśli nagranie trzeba usunąć, usunąć plik, segmenty, podsumowanie, zadania i przypisanie. |
+| Spotkanie poufne | Q7. Nie importować albo importować do ciaśniejszej listy dostępu. Ekran przypisywania nigdy nie staje się tylnym wejściem dla osób, które nie mogą usłyszeć nagrania. |
+| Pracownik odchodzi | Q11. Historia przypisań zostaje. Jego login traci dostęp. Inny wewnętrzny uczestnik nadal może przypisywać. Jeśli nikogo innego z firmy nie było, mówcy zostają identyfikatorami. |
+| Wyszukiwania albo asystenta pyta ktoś, kto nie powinien widzieć spotkania | D7. Filtrować spotkania przed jakimkolwiek wywołaniem modelu. Nie wkładać legendy przypisań do promptu. |
+| Dwie osoby mówią jednocześnie albo dzielą jedno konto Google | D4 i Q12. Pierwsza wersja zostawia dodatkowego mówcę jako identyfikator. Scalanie, dzielenie, segment mieszany i ręcznie dodany gość przychodzą później, tylko jeśli prawdziwe spotkania tego potrzebują. |
 
-### Facts and assumptions, short list
+### Krótka lista faktów i założeń
 
-Facts are in section 1 and carry links. The assumptions that the implementation depends on:
+Fakty są w sekcji 1 i mają linki. Założenia, od których zależy implementacja:
 
-- The transcription model drops backchannels and separates speakers well enough that merge and split are not in the first version. Segments are still stored with timestamps, so a later editor can move them without a new recording.
-- One extra LLM call per mapped meeting is affordable. Q2 can overturn the full regeneration. Task labels would still update from the mapping with no call.
-- Domain-wide delegation cannot be scoped to an organizational unit by Google. We scope it by which users the job impersonates.
-- A role plus speaker id is still personal data. We send it because the task needs the side of the table, not because it is anonymous.
-- About 400 meetings a month is arithmetic from the assignment's 300 hours and 45 minutes, not a measurement.
+- Model transkrypcji usuwa backchanneling i rozdziela mówców na tyle dobrze, że scalania i dzielenia nie ma w pierwszej wersji. Segmenty i tak są przechowywane ze znacznikami czasu, więc późniejszy edytor może je przenosić bez nowego nagrania.
+- Jedno dodatkowe wywołanie LLM na przypisane spotkanie jest do udźwignięcia. Q2 może obalić pełne ponowne generowanie. Etykiety zadań i tak aktualizowałyby się z przypisania bez wywołania.
+- Domain-wide delegation nie da się u Google ograniczyć do jednostki organizacyjnej. Ograniczamy je tym, których użytkowników impersonuje zadanie.
+- Rola plus identyfikator mówcy nadal są danymi osobowymi. Wysyłamy je, ponieważ zadanie potrzebuje strony stołu, a nie dlatego, że są anonimowe.
+- Około 400 spotkań miesięcznie to arytmetyka z 300 godzin i 45 minut z zadania, a nie pomiar.
 
-### What I would say if asked "why not just send the name"
+### Co odpowiedziałbym na pytanie „dlaczego po prostu nie wysłać nazwy”
 
-The view the user sees has the name. The sentence in the database and the prompt do not. That split is what makes a wrong click reversible and what keeps the mapping testable. Sending the name produces better prose and a worse correction story, and it puts the identity in the vendor's logs. I compared that option, the first-name option, and the id option, and kept the ids.
+Widok, który widzi użytkownik, ma nazwę. Zdanie w bazie i w prompcie jej nie ma. Ten podział sprawia, że błędne kliknięcie da się cofnąć, i pozwala testować przypisanie. Wysłanie nazwy daje lepszą prozę i gorszą historię poprawki, a tożsamość ląduje w logach dostawcy. Porównałem tę opcję, opcję samego imienia i opcję identyfikatora, i zostałem przy identyfikatorach.

@@ -1,217 +1,217 @@
-# Technology stack
+# Stos technologiczny
 
-Short decision record for the implementation. Written on 2026-11-02. The search story is out of scope for this version.
+Krótka notatka decyzyjna dotycząca implementacji. Sporządzona 2026-11-02. Zakres wyszukiwania nie obejmuje tej wersji.
 
-## First test version
+## Pierwsza wersja testowa
 
-The first version runs locally in Docker and must demonstrate the three in-scope user stories and Part B. Google integration, real authentication, hosting, and the frontend are intentionally replaced with test doubles.
+Pierwsza wersja działa lokalnie w Dockerze i musi zademonstrować trzy historyjki użytkownika objęte zakresem oraz część B. Integracja z Google, rzeczywiste uwierzytelnianie, hosting i frontend są celowo zastąpione atrapami testowymi.
 
-### NestJS and TypeScript
+### NestJS i TypeScript
 
-**Why chosen**
+**Dlaczego wybrano**
 
-- NestJS provides a clear module, guard, provider, and worker structure for the growing application.
-- TypeScript matches the planned Next.js frontend and allows sharing types or Zod schemas later.
-- It is a natural fit for BullMQ, Redis, HTTP APIs, and background workers.
+- NestJS zapewnia przejrzystą strukturę modułów, guardów, providerów i workerów dla rozwijającej się aplikacji.
+- TypeScript pasuje do planowanego frontendu Next.js i pozwala później współdzielić typy lub schematy Zod.
+- Jest naturalnie dopasowany do BullMQ, Redis, API HTTP i workerów działających w tle.
 
-**Costs and limitations**
+**Koszty i ograniczenia**
 
-- It introduces more structure and files than a small Fastify or Express API.
-- Zod validation is not NestJS's default approach and needs an adapter or custom pipe.
-- The framework does not enforce meeting-level authorization by itself; guards and policy tests are still required.
+- Wprowadza więcej struktury i plików niż małe API oparte na Fastify lub Express.
+- Walidacja Zod nie jest domyślnym podejściem w NestJS i wymaga adaptera lub własnego pipe'a.
+- Framework samodzielnie nie egzekwuje autoryzacji na poziomie spotkania; nadal potrzebne są guardy i testy polityk dostępu.
 
-**Rejected alternatives**
+**Odrzucone alternatywy**
 
-- FastAPI was considered because of Pydantic and Python ML tooling, but no decisive advantage remained after considering Vercel AI SDK, Vitest, and the low probability of self-hosted transcription.
-- Express/Fastify would require more application structure to be established manually.
+- Rozważano FastAPI ze względu na Pydantic i narzędzia ML w Pythonie, ale po uwzględnieniu Vercel AI SDK, Vitest i małego prawdopodobieństwa self-hosted transcription nie pozostała żadna rozstrzygająca przewaga.
+- Express/Fastify wymagałyby ręcznego ustanowienia większej części struktury aplikacji.
 
-### PostgreSQL, Drizzle ORM, and Drizzle Kit
+### PostgreSQL, Drizzle ORM i Drizzle Kit
 
-**Why chosen**
+**Dlaczego wybrano**
 
-- PostgreSQL models meetings, participants, segments, summaries, tasks, permissions, mapping history, and pipeline steps reliably.
-- Drizzle keeps the schema and queries in TypeScript and makes conditional updates and transactions explicit.
-- The same database setup works locally and later with Neon.
+- PostgreSQL niezawodnie modeluje spotkania, uczestników, segmenty, podsumowania, zadania, uprawnienia, historię mapowania i kroki pipeline'u.
+- Drizzle przechowuje schemat i zapytania w TypeScript oraz jasno pokazuje aktualizacje warunkowe i transakcje.
+- Ta sama konfiguracja bazy danych działa lokalnie i później z Neon.
 
-**Costs and limitations**
+**Koszty i ograniczenia**
 
-- Drizzle is closer to SQL than Prisma, so relations and query composition require more explicit code.
-- The team must maintain conventions for schema organization, transactions, and migrations.
-- A pooled Neon connection should be used by the application and a direct connection by migration commands.
+- Drizzle jest bliżej SQL niż Prisma, więc relacje i składanie zapytań wymagają bardziej jawnego kodu.
+- Zespół musi utrzymywać konwencje dotyczące organizacji schematu, transakcji i migracji.
+- Aplikacja powinna korzystać z połączenia Neon przez pool, a polecenia migracji z połączenia bezpośredniego.
 
-**Rejected alternatives**
+**Odrzucone alternatywy**
 
-- Prisma was rejected because its generated client and separate schema language add another abstraction for this relatively small model.
-- TypeORM was not selected because decorator-based entities would add framework coupling and make the database schema less explicit.
+- Prisma odrzucono, ponieważ generowany klient i osobny język schematu dodają kolejną warstwę abstrakcji dla tego stosunkowo małego modelu.
+- TypeORM nie wybrano, ponieważ encje oparte na dekoratorach zwiększałyby powiązanie z frameworkiem i zmniejszałyby jawność schematu bazy danych.
 
-### BullMQ and Redis
+### BullMQ i Redis
 
-**Why chosen**
+**Dlaczego wybrano**
 
-- BullMQ provides retries, delays, concurrency, workers, and failed-job handling for NestJS.
-- Redis and the worker can run in the local Docker Compose setup.
-- Jobs contain only a meeting id and step name; PostgreSQL remains the source of truth for idempotency.
+- BullMQ zapewnia dla NestJS ponowienia, opóźnienia, współbieżność, workery i obsługę nieudanych zadań.
+- Redis i worker mogą działać w lokalnej konfiguracji Docker Compose.
+- Zadania zawierają wyłącznie identyfikator spotkania i nazwę kroku; PostgreSQL pozostaje źródłem prawdy dla idempotencji.
 
-**Costs and limitations**
+**Koszty i ograniczenia**
 
-- Redis persistence must be configured; otherwise a restart can lose queued jobs.
-- The worker is a separate long-running process and is not a good fit for a scale-to-zero HTTP service alone.
-- At-least-once delivery still requires database state checks to prevent duplicate processing.
+- Trwałość Redis musi zostać skonfigurowana; w przeciwnym razie restart może spowodować utratę zadań oczekujących w kolejce.
+- Worker jest osobnym, długotrwale działającym procesem i sam w sobie nie pasuje dobrze do usługi HTTP ze skalowaniem do zera.
+- Dostarczanie co najmniej raz nadal wymaga sprawdzania stanu w bazie danych, aby zapobiec wielokrotnemu przetwarzaniu.
 
-**Rejected alternatives**
+**Odrzucone alternatywy**
 
-- RabbitMQ is more durable and protocol-oriented, but adds a heavier broker and more operational configuration than this workload needs.
-- QStash is kept as a possible later option, but it cannot be used by the local-only first version and stores message data in a third-party service.
+- RabbitMQ jest trwalszy i bardziej zorientowany na protokół, ale dodaje cięższy broker i więcej konfiguracji operacyjnej, niż wymaga to obciążenie.
+- QStash pozostaje możliwą opcją na później, ale nie może być użyty w lokalnej, pierwszej wersji i przechowuje dane wiadomości w usłudze zewnętrznej.
 
-### Vitest and Swagger/OpenAPI
+### Vitest i Swagger/OpenAPI
 
-**Why chosen**
+**Dlaczego wybrano**
 
-- Vitest provides fast unit and integration tests for authorization, idempotency, schema validation, and the outbound-data filter.
-- Swagger/OpenAPI makes the API demonstrable without a frontend.
+- Vitest zapewnia szybkie testy jednostkowe i integracyjne autoryzacji, idempotencji, walidacji schematów oraz filtra danych wysyłanych na zewnątrz.
+- Swagger/OpenAPI pozwala zademonstrować API bez frontendu.
 
-**Costs and limitations**
+**Koszty i ograniczenia**
 
-- Tests do not prove that Google, AssemblyAI, or a model provider behaves correctly unless contract tests are added.
-- OpenAPI documents the API but does not implement authorization.
+- Testy nie dowodzą, że Google, AssemblyAI lub dostawca modelu zachowuje się poprawnie, chyba że zostaną dodane testy kontraktowe.
+- OpenAPI dokumentuje API, ale nie implementuje autoryzacji.
 
-**Rejected alternatives**
+**Odrzucone alternatywy**
 
-- Jest was not selected because Vitest is a simpler fit for the TypeScript toolchain.
-- A frontend was deferred because it is not required for Part B and would reduce time available for security and pipeline tests.
+- Nie wybrano Jest, ponieważ Vitest lepiej i prościej pasuje do toolchainu TypeScript.
+- Frontend odłożono, ponieważ nie jest wymagany w części B i ograniczyłby czas dostępny na testy bezpieczeństwa i pipeline'u.
 
-### Test doubles
+### Atrapy testowe
 
-**Why chosen**
+**Dlaczego wybrano**
 
-- A fake recording source, fake transcription provider, and fake summary provider make the complete flow reproducible without client data or external credentials.
-- The fake summary returns the same Zod-validated structure as a real provider.
+- Fałszywe źródło nagrań, fałszywy provider transkrypcji i fałszywy provider podsumowań sprawiają, że pełny przepływ można odtwarzać bez danych klientów i zewnętrznych poświadczeń.
+- Fałszywe podsumowanie zwraca tę samą strukturę walidowaną przez Zod co rzeczywisty provider.
 
-**Costs and limitations**
+**Koszty i ograniczenia**
 
-- A fake cannot demonstrate Polish transcription or real diarization quality.
-- Provider-specific failures, timeouts, and rate limits need separate tests.
+- Atrapa nie pozwala zademonstrować jakości transkrypcji w języku polskim ani rzeczywistej jakości diarization.
+- Awarie, przekroczenia czasu i limity zapytań specyficzne dla providera wymagają osobnych testów.
 
-**Rejected alternatives**
+**Odrzucone alternatywy**
 
-- Real Google and AI integrations were deferred because the assignment explicitly allows stubs and the first version must run locally.
+- Rzeczywiste integracje z Google i AI odłożono, ponieważ zadanie wyraźnie dopuszcza stuby, a pierwsza wersja musi działać lokalnie.
 
-## Later versions
+## Późniejsze wersje
 
-### AssemblyAI Universal-2 and ffmpeg
+### AssemblyAI Universal-2 i ffmpeg
 
-**Why chosen**
+**Dlaczego wybrano**
 
-- AssemblyAI Universal-2 supports Polish, English code-switching, and speaker diarization.
-- The EU endpoint and short retention configuration reduce, but do not remove, privacy concerns.
-- ffmpeg extracts one mono audio track from the Meet MP4 before upload; this avoids sending video and avoids paying for multiple audio channels.
+- AssemblyAI Universal-2 obsługuje język polski, przełączanie między językiem polskim i angielskim oraz diarization mówców.
+- Endpoint UE i krótka konfiguracja retencji zmniejszają obawy dotyczące prywatności, ale ich nie eliminują.
+- ffmpeg wyodrębnia jedną monofoniczną ścieżkę audio z Meet MP4 przed wysłaniem; dzięki temu nie wysyłamy obrazu i nie płacimy za wiele kanałów audio.
 
-**Costs and limitations**
+**Koszty i ograniczenia**
 
-- Audio and transcript leave the company's infrastructure and require legal review, a DPA, retention controls, and vendor monitoring.
-- Diarization produces local speaker ids, not verified Google identities, so human mapping remains necessary.
-- ffmpeg and large temporary files require suitable worker storage and CPU.
+- Audio i transkrypcja opuszczają infrastrukturę firmy, co wymaga przeglądu prawnego, DPA, kontroli retencji i monitorowania dostawcy.
+- Diarization tworzy lokalne identyfikatory mówców, a nie zweryfikowane tożsamości Google, dlatego nadal konieczne jest ręczne mapowanie.
+- ffmpeg i duże pliki tymczasowe wymagają odpowiedniej przestrzeni dyskowej i CPU workera.
 
-**Rejected alternatives**
+**Odrzucone alternatywy**
 
-- Meet's native transcript was rejected because Polish is not supported in the saved transcript languages.
-- A Meet bot and the deprecated Meet Media API were rejected because of privacy, maintenance, support, and lifecycle risks.
-- Self-hosted Whisper/pyannote was kept as a fallback, not selected for the first implementation.
+- Natywną transkrypcję Meet odrzucono, ponieważ język polski nie jest obsługiwany w językach zapisywanej transkrypcji.
+- Bota Meet i wycofane Meet Media API odrzucono ze względu na ryzyko związane z prywatnością, utrzymaniem, wsparciem i cyklem życia.
+- Self-hosted Whisper/pyannote pozostawiono jako rozwiązanie awaryjne, ale nie wybrano go do pierwszej implementacji.
 
-### Google Meet REST API, Drive API, and a delegated service account
+### Google Meet REST API, Drive API i delegowane konto usługi
 
-**Why chosen**
+**Dlaczego wybrano**
 
-- Meet provides recording metadata and Drive provides the MP4 bytes.
-- `meetings.space.readonly` and `drive.meet.readonly` are narrower than full Drive access.
-- Domain-wide delegation can impersonate only approved meeting organizers.
+- Meet udostępnia metadane nagrania, a Drive — bajty MP4.
+- `meetings.space.readonly` i `drive.meet.readonly` mają węższy zakres niż pełny dostęp do Drive.
+- Domain-wide delegation może podszywać się wyłącznie pod zatwierdzonych organizatorów spotkań.
 
-**Costs and limitations**
+**Koszty i ograniczenia**
 
-- The application must wait for `FILE_GENERATED`; a meeting can have no recording or the organizer can delete it.
-- Domain-wide delegation is sensitive and requires strict impersonation, audit, retention, and deletion controls.
-- This integration identifies participants but does not identify diarized voices automatically.
+- Aplikacja musi czekać na `FILE_GENERATED`; spotkanie może nie mieć nagrania albo organizator może je usunąć.
+- Domain-wide delegation jest wrażliwe i wymaga ścisłej kontroli podszywania się, audytu, retencji i usuwania.
+- Ta integracja identyfikuje uczestników, ale nie identyfikuje automatycznie zdiaryzowanych głosów.
 
-**Rejected alternatives**
+**Odrzucone alternatywy**
 
-- A browser bot and laptop recording were rejected as unsupported or operationally fragile.
-- Google OAuth for employees is not used to download recordings; these are separate trust boundaries.
+- Bota przeglądarkowego i nagrywanie z laptopa odrzucono jako nieobsługiwane lub operacyjnie kruche.
+- Google OAuth dla pracowników nie służy do pobierania nagrań; są to odrębne granice zaufania.
 
-### Vercel AI SDK and model providers
+### Vercel AI SDK i dostawcy modeli
 
-**Why chosen**
+**Dlaczego wybrano**
 
-- The SDK fits the TypeScript/NestJS stack and supports structured output with Zod.
-- The same sample segments can be tested with OpenAI, Anthropic, Google, Mistral, or another compatible provider.
-- The final choice should be based on Polish quality, output validity, latency, privacy, and cost rather than an assumed vendor.
-- OpenAI with EU regional processing is the first candidate, subject to legal review and account eligibility.
+- SDK pasuje do stosu TypeScript/NestJS i obsługuje ustrukturyzowane dane wyjściowe z Zod.
+- Te same przykładowe segmenty można testować z OpenAI, Anthropic, Google, Mistral lub innym kompatybilnym providerem.
+- Ostateczny wybór powinien opierać się na jakości języka polskiego, poprawności danych wyjściowych, opóźnieniu, prywatności i koszcie, a nie na założeniu dotyczącym konkretnego dostawcy.
+- OpenAI z przetwarzaniem regionalnym w UE jest pierwszym kandydatem, z zastrzeżeniem przeglądu prawnego i dostępności tej opcji na koncie.
 
-**Costs and limitations**
+**Koszty i ograniczenia**
 
-- Each provider has different model quality, structured-output behavior, pricing, retention, and regional-processing rules.
-- Provider abstractions do not remove the need for an outbound-data filter; names and emails must stay out of prompts.
-- A model comparison requires representative, non-client sample data and repeatable evaluation criteria.
+- Każdy provider ma inną jakość modelu, sposób obsługi ustrukturyzowanych danych wyjściowych, ceny, retencję i zasady przetwarzania regionalnego.
+- Abstrakcje providerów nie eliminują potrzeby stosowania filtra danych wysyłanych na zewnątrz; imiona, nazwiska i adresy e-mail muszą pozostać poza promptami.
+- Porównanie modeli wymaga reprezentatywnych, nieklienckich danych przykładowych i powtarzalnych kryteriów oceny.
 
-**Rejected alternatives**
+**Odrzucone alternatywy**
 
-- Pydantic AI was not selected after moving the backend to TypeScript; Vercel AI SDK provides the equivalent model comparison and Zod integration in the chosen runtime.
-- A single provider was not treated as final before testing quality against cost and privacy requirements.
+- Pydantic AI nie wybrano po przeniesieniu backendu do TypeScript; Vercel AI SDK zapewnia w wybranym środowisku równoważne porównywanie modeli i integrację z Zod.
+- Nie uznano jednego providera za rozwiązanie ostateczne przed przetestowaniem jakości względem wymagań dotyczących kosztu i prywatności.
 
-### Next.js, Auth.js with Google, and Vercel
+### Next.js, Auth.js with Google i Vercel
 
-**Why chosen**
+**Dlaczego wybrano**
 
-- Next.js and Auth.js provide the planned employee-facing interface and Google Workspace login.
-- Auth.js identifies the employee; NestJS still checks access to each meeting, transcript, clip, and mapping action.
-- Vercel is a practical deployment target for Next.js and preview environments.
+- Next.js i Auth.js zapewniają planowany interfejs dla pracowników oraz logowanie przez Google Workspace.
+- Auth.js identyfikuje pracownika; NestJS nadal sprawdza dostęp do każdego spotkania, transkrypcji, klipu i działania mapowania.
+- Vercel jest praktycznym miejscem wdrożenia dla Next.js i środowisk preview.
 
-**Costs and limitations**
+**Koszty i ograniczenia**
 
-- Auth.js does not implement meeting authorization and requires careful token/session validation.
-- The frontend and API have separate deployment and cookie/CORS concerns.
-- Responses containing meeting data must not be incorrectly shared by CDN caching.
+- Auth.js nie implementuje autoryzacji spotkań i wymaga starannej walidacji tokenów i sesji.
+- Frontend i API mają odrębne kwestie wdrożenia oraz cookie/CORS.
+- Odpowiedzi zawierające dane spotkań nie mogą zostać nieprawidłowo udostępnione przez cache CDN.
 
-**Rejected alternatives**
+**Odrzucone alternatywy**
 
-- Firebase Authentication was not selected because Firebase Authentication stores authentication data in the United States.
-- Firebase App Hosting was not selected because it would not remove the separate API deployment and would couple the frontend to another platform.
-- The frontend is not part of the first test version.
+- Firebase Authentication nie wybrano, ponieważ Firebase Authentication przechowuje dane uwierzytelniania w Stanach Zjednoczonych.
+- Firebase App Hosting nie wybrano, ponieważ nie usunąłby potrzeby osobnego wdrożenia API i wiązałby frontend z kolejną platformą.
+- Frontend nie jest częścią pierwszej wersji testowej.
 
-### Google Cloud Run, Neon, and GitHub Actions
+### Google Cloud Run, Neon i GitHub Actions
 
-**Why chosen**
+**Dlaczego wybrano**
 
-- Cloud Run hosts the NestJS API and can run a separately deployed worker.
-- Neon provides managed PostgreSQL, pooling, branching, and a straightforward path from local PostgreSQL.
-- GitHub Actions runs tests and migrations before deployment.
+- Cloud Run hostuje API NestJS i może uruchamiać osobno wdrożonego workera.
+- Neon zapewnia zarządzany PostgreSQL, pooling, branching i prostą ścieżkę przejścia z lokalnego PostgreSQL.
+- GitHub Actions uruchamia testy i migracje przed wdrożeniem.
 
-**Costs and limitations**
+**Koszty i ograniczenia**
 
-- Cloud Run request limits and scale-to-zero behavior require a separate worker for long-running steps.
-- Neon pooling, direct migration connections, backups, and retention require explicit configuration.
-- Deployment credentials, secrets, regions, logs, and backups become production responsibilities.
+- Limity żądań Cloud Run i zachowanie związane ze skalowaniem do zera wymagają osobnego workera dla długotrwałych kroków.
+- Pooling Neon, bezpośrednie połączenia migracyjne, kopie zapasowe i retencja wymagają jawnej konfiguracji.
+- Poświadczenia wdrożeniowe, sekrety, regiony, logi i kopie zapasowe stają się odpowiedzialnością produkcyjną.
 
-**Rejected alternatives**
+**Odrzucone alternatywy**
 
-- A VPS was not selected as the default because it shifts TLS, patching, scaling, backups, and worker supervision to the team.
-- Firebase hosting was not selected for the backend because it does not replace a NestJS worker and PostgreSQL deployment.
-- These services are deliberately absent from the first local version.
+- VPS nie wybrano jako domyślnego rozwiązania, ponieważ przenosi na zespół obsługę TLS, poprawek, skalowania, kopii zapasowych i nadzoru nad workerem.
+- Firebase hosting nie wybrano dla backendu, ponieważ nie zastępuje workera NestJS ani wdrożenia PostgreSQL.
+- Te usługi celowo nie występują w pierwszej wersji lokalnej.
 
-## Risks and questions before implementation
+## Ryzyka i pytania przed implementacją
 
-- Can the company legally send client meeting audio and transcript segments to AssemblyAI and model providers? What DPA, transfer mechanism, region, retention, and deletion rules are required?
-- Which model provider wins a controlled test on Polish meetings with English terms and speaker ids? What quality and cost threshold is acceptable?
-- Is manual speaker mapping an accepted company procedure, and who may map a meeting after an employee leaves?
-- Which meetings must never be imported, and what signal marks confidential meetings or a recording refusal?
-- What are the exact retention periods for MP4, audio extract, segments, summaries, tasks, mapping history, logs, backups, and failed jobs?
-- Which Google Workspace users may be impersonated, and how will domain-wide delegation and downloads be audited?
-- Can the selected Cloud Run deployment support the worker, ffmpeg storage, retries, and expected concurrency without losing a step?
-- Will Redis persistence and PostgreSQL idempotency be tested with a worker crash between every pipeline step?
-- How will secrets, provider logs, QStash/BullMQ data, and application logs be prevented from containing meeting content?
-- Who owns production operation of Redis, the worker, Neon backups, migrations, and incident recovery?
+- Czy firma może zgodnie z prawem wysyłać audio ze spotkań klientów i segmenty transkrypcji do AssemblyAI oraz dostawców modeli? Jakie DPA, mechanizm transferu, region, zasady retencji i usuwania są wymagane?
+- Który provider modelu zwycięży w kontrolowanym teście polskich spotkań z angielskimi terminami i identyfikatorami mówców? Jaki próg jakości i kosztu jest akceptowalny?
+- Czy ręczne mapowanie mówców jest akceptowaną procedurą firmową i kto może mapować spotkanie po odejściu pracownika?
+- Które spotkania nigdy nie mogą być importowane i jaki sygnał oznacza spotkanie poufne lub odmowę nagrania?
+- Jakie są dokładne okresy retencji dla MP4, wyodrębnionego audio, segmentów, podsumowań, zadań, historii mapowania, logów, kopii zapasowych i nieudanych zadań?
+- Którzy użytkownicy Google Workspace mogą być impersonowani i jak będą audytowane domain-wide delegation oraz pobieranie danych?
+- Czy wybrane wdrożenie Cloud Run obsłuży workera, przestrzeń dla ffmpeg, ponowienia i oczekiwaną współbieżność bez utraty kroku?
+- Czy trwałość Redis i idempotencja PostgreSQL zostaną przetestowane w przypadku awarii workera między każdą parą kroków pipeline'u?
+- W jaki sposób sekrety, logi providerów, dane QStash/BullMQ i logi aplikacji będą chronione przed zawieraniem treści spotkań?
+- Kto będzie odpowiadać za produkcyjną obsługę Redis, workera, kopii zapasowych Neon, migracji i odzyskiwania po incydentach?
 
-## How AI was used
+## Jak wykorzystano AI
 
-AI was used to compare NestJS and FastAPI, evaluate queues, authentication options, hosting, ORMs, and model providers, and identify risks in privacy, authorization, retries, storage, and deployment.
+AI wykorzystano do porównania NestJS i FastAPI, oceny kolejek, opcji uwierzytelniania, hostingu, ORM-ów i dostawców modeli, a także do identyfikacji ryzyk związanych z prywatnością, autoryzacją, ponowieniami, przechowywaniem i wdrażaniem.
 
-I asked for alternatives before choosing technologies, requested verification of current vendor documentation, and challenged conclusions that were based only on framework conventions or job-offer alignment. I made the final decisions and kept important assumptions and open legal questions explicit.
+Przed wyborem technologii prosiłem o przedstawienie alternatyw, żądałem weryfikacji aktualnej dokumentacji dostawców i kwestionowałem wnioski oparte wyłącznie na konwencjach frameworków lub dopasowaniu do oferty pracy. Ostateczne decyzje podjąłem samodzielnie, zachowując jawność istotnych założeń i otwartych pytań prawnych.

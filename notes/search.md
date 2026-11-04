@@ -1,447 +1,246 @@
-# Search and meeting assistant
+# Wyszukiwanie i asystent spotkań
 
-Decision record for searching meeting transcripts and answering questions with
-sources. Written on 2026-11-02 from the discussion and decisions made before
-implementation.
+Rejestr decyzji dotyczący wyszukiwania transkrypcji spotkań i odpowiadania na pytania ze źródłami. Sporządzony 2026-11-02 na podstawie dyskusji i decyzji podjętych przed implementacją.
 
-This record describes the planned later feature. Search and the assistant are
-explicitly out of scope for the first version.
+Ten rejestr opisuje planowaną funkcję w późniejszej wersji. Wyszukiwanie i asystent są wyraźnie poza zakresem pierwszej wersji.
 
-## 1. Decision summary
+## 1. Podsumowanie decyzji
 
-### Search is deferred from the first version
+### Wyszukiwanie odroczone względem pierwszej wersji
 
-**Chosen.** The first version will not implement transcript search or the
-question-answering assistant.
+**Wybrano.** Pierwsza wersja nie będzie implementować wyszukiwania transkrypcji ani asystenta odpowiadającego na pytania.
 
-**Reasons.**
+**Powody.**
 
-- Search is not necessary for the rest of the system to function correctly.
-- The remaining features already provide enough value to validate the product
-  idea through an MVP: importing a meeting, processing it, producing a Polish
-  transcript, generating a structured summary, extracting tasks, and enforcing
-  access control.
-- Correctly implementing and testing search would require substantially more
-  time because it includes many edge cases and different question types.
-- Search is a security-sensitive feature: an incorrect retrieval filter or
-  generated answer could disclose a meeting, transcript fragment, client name,
-  or task to a person without access.
-- Search quality cannot be validated with framework tests alone; it requires a
-  representative, non-confidential evaluation set covering Polish language,
-  English campaign names, paraphrases, misspellings, numbers, dates, and
-  multi-meeting questions.
+- Wyszukiwanie nie jest konieczne, aby pozostała część systemu działała poprawnie.
+- Pozostałe funkcje zapewniają już wystarczającą wartość do zweryfikowania pomysłu na produkt za pomocą MVP: importowanie spotkania, jego przetwarzanie, przygotowanie polskiej transkrypcji, wygenerowanie ustrukturyzowanego podsumowania, wyodrębnienie zadań i egzekwowanie kontroli dostępu.
+- Poprawna implementacja i testowanie wyszukiwania wymagałyby znacznie więcej czasu, ponieważ obejmują wiele przypadków brzegowych i różne typy pytań.
+- Wyszukiwanie jest funkcją wrażliwą z punktu widzenia bezpieczeństwa: niepoprawny filtr pobierania danych lub wygenerowana odpowiedź może ujawnić spotkanie, fragment transkrypcji, nazwę klienta albo zadanie osobie bez dostępu.
+- Jakości wyszukiwania nie można zweryfikować wyłącznie za pomocą testów frameworka; potrzebny jest reprezentatywny, niepoufny zestaw ewaluacyjny obejmujący język polski, angielskie nazwy kampanii, parafrazy, literówki, liczby, daty i pytania dotyczące wielu spotkań.
 
-**Consequence.** The first version must still store stable meeting, segment,
-summary, task, speaker, and permission identifiers so that search can be added
-without redesigning the processing pipeline.
+**Konsekwencja.** Pierwsza wersja nadal musi przechowywać stabilne identyfikatory spotkań, segmentów, podsumowań, zadań, mówców i uprawnień, aby można było dodać wyszukiwanie bez przeprojektowywania potoku przetwarzania.
 
-**Not a decision.** This does not mean search is unnecessary for the eventual
-product; it means that its quality and security bar is too high for the first
-implementation scope.
+**To nie jest decyzja o rezygnacji.** Nie oznacza to, że wyszukiwanie jest niepotrzebne w docelowym produkcie; oznacza, że wymagany poziom jakości i bezpieczeństwa jest zbyt wysoki dla zakresu implementacji pierwszej wersji.
 
-## 2. Planned technology
+## 2. Planowana technologia
 
-The planned implementation stays within the selected TypeScript and PostgreSQL
-architecture:
+Planowana implementacja pozostaje w ramach wybranej architektury TypeScript i PostgreSQL:
 
-- **NestJS** will expose the search API and coordinate query planning,
-  authorization, retrieval, model calls, and response validation.
-- **PostgreSQL** will remain the source of truth for meetings, participants,
-  speaker mappings, transcript segments, summaries, tasks, permissions, and
-  source references.
-- `pg_trgm` will support lexical matching for names, company names, titles,
-  campaign identifiers, numbers, and misspellings.
-- `pgvector` will store embeddings and support semantic matching for
-  paraphrases and related terms, such as “budget” and “media spend”.
-- **Vercel AI SDK** will provide provider-independent embedding and structured
-  generation APIs, including Zod validation.
-- **OpenAI** is the first candidate provider for embeddings and answer
-  generation, subject to the same legal, regional-processing, retention, and
-  quality review as the other model providers.
-- **Zod** will validate the parsed query plan, extracted values, generated
-  answer, and source identifiers.
+- **NestJS** będzie udostępniać API wyszukiwania oraz koordynować planowanie zapytań, autoryzację, pobieranie danych, wywołania modeli i walidację odpowiedzi.
+- **PostgreSQL** pozostanie źródłem prawdy dla spotkań, uczestników, mapowań mówców, segmentów transkrypcji, podsumowań, zadań, uprawnień i odwołań do źródeł.
+- `pg_trgm` będzie wspierać dopasowanie leksykalne nazw, nazw firm, tytułów, identyfikatorów kampanii, liczb i literówek.
+- `pgvector` będzie przechowywać embeddingi i wspierać dopasowanie semantyczne parafraz oraz powiązanych terminów, takich jak „budget” i „media spend”.
+- **Vercel AI SDK** zapewni niezależne od dostawcy API do generowania embeddingów i ustrukturyzowanych odpowiedzi, w tym walidację za pomocą Zod.
+- **OpenAI** jest pierwszym kandydatem na dostawcę embeddingów i generowania odpowiedzi, z zastrzeżeniem takiej samej weryfikacji prawnej, regionalnego przetwarzania danych, retencji i jakości jak w przypadku pozostałych dostawców modeli.
+- **Zod** będzie walidować sparsowany plan zapytania, wyodrębnione wartości, wygenerowaną odpowiedź i identyfikatory źródeł.
 
-This technology choice does not authorize adding `pgvector`, `pg_trgm`, model
-providers, or search dependencies to the first version.
+Ten wybór technologii nie upoważnia do dodawania `pgvector`, `pg_trgm`, dostawców modeli ani zależności wyszukiwania do pierwszej wersji.
 
-## 3. Search principles
+## 3. Zasady wyszukiwania
 
-1. Authorization happens before retrieval and before any text is sent to a
+1. Autoryzacja odbywa się przed pobraniem danych i przed wysłaniem jakiegokolwiek tekstu do modelu.
+2. Model nigdy nie przeszukuje korpusu obejmującego całą firmę i nigdy nie jest traktowany jako zaufany mechanizm egzekwowania uprawnień.
+3. API wybiera materiał dowodowy; model zapisuje odpowiedź wyłącznie na podstawie tego materiału.
+4. Cytaty ze źródeł są po wygenerowaniu wczytywane dosłownie z PostgreSQL, zamiast ufać tekstowi wygenerowanemu przez model.
+5. Nazwy i adresy e-mail mówców pozostają w wewnętrznych tabelach mapowań i są rozwiązywane dopiero w odpowiedzi wyświetlanej uprawnionemu wywołującemu.
+6. Nieprzypisani mówcy nie są zgadywani na podstawie listy uczestników.
+7. Operacje matematyczne, zliczanie i porównania wykonuje kod aplikacji, a nie model.
+8. Wynik o niskiej pewności lub niejednoznaczny powoduje zwrócenie prośby o doprecyzowanie albo odpowiedzi o niewystarczających danych zamiast zgadywania.
 
-   model.
+## 4. Przepływ indeksowania
 
-2. The model never searches the company-wide corpus and is never trusted to
+1. Po zapisaniu segmentów transkrypcji worker grupuje sąsiednie segmenty w przeszukiwalne fragmenty zawierające identyfikator spotkania, zakres czasu, identyfikatory segmentów, identyfikatory mówców oraz tekst bez nazw osób i adresów e-mail.
+2. Po pomyślnym przejściu walidacji przez ustrukturyzowane podsumowanie worker zapisuje decyzje i zadania wraz z identyfikatorami mówców, rolami i identyfikatorami segmentów źródłowych.
+3. Worker generuje embeddingi dla fragmentów, decyzji i zadań, używając tego samego modelu embeddingowego, który jest używany dla zapytań.
+4. PostgreSQL przechowuje embeddingi i tworzy indeksy leksykalne dla przeszukiwalnego tekstu.
+5. Zmiana mapowania mówcy nie zmienia surowych fragmentów transkrypcji, ale może uruchomić ponowne wygenerowanie i indeksowanie powiązanych ustrukturyzowanych decyzji.
+6. Każdy przeszukiwalny rekord zachowuje identyfikator spotkania, aby predykat autoryzacji można było zastosować do każdego zapytania pobierającego dane.
 
-   enforce permissions.
+Transkrypcja jest przeszukiwalna, ale decyzje i zadania otrzymują wyższy priorytet rankingu, ponieważ zawierają więcej informacji istotnych dla pytań o ustalenia i odpowiedzialności.
 
-3. The API selects the evidence; the model writes an answer only from that
+## 5. Typowy przepływ zapytania
 
-   evidence.
+1. Endpoint NestJS otrzymuje identyfikator uwierzytelnionego użytkownika, pytanie oraz opcjonalny kontekst, taki jak spotkanie aktualnie otwarte w interfejsie.
+2. Warstwa autoryzacji buduje zbiór spotkań, które użytkownik może odczytać.
+3. Planista zapytań klasyfikuje pytanie jako obsługiwane pytanie dotyczące spotkania, prośbę o doprecyzowanie, porównanie, listę, zliczenie, zapytanie o metadane albo zapytanie nieobsługiwane.
+4. Planista wyodrębnia potencjalne encje, zakresy czasu, odwołania do spotkań, tematy, oczekiwany format wyniku oraz wymagania dotyczące porównania lub zliczania.
+5. API rozwiązuje nazwy i firmy względem uprawnionych osób i spotkań, używając dopasowania leksykalnego tolerującego literówki.
+6. Jeśli nazwa ma wiele prawdopodobnych dopasowań, API prosi użytkownika o wybór zamiast zgadywać.
+7. API rozwiązuje jawne zakresy czasu, zakresy względne, takie jak „ostatnie spotkanie”, spotkanie otwarte w interfejsie, tytuły, nazwy kampanii lub wiele jawnie wskazanych spotkań.
+8. Jeśli pytanie zawiera wyłącznie temat i nie ma użytecznego zakresu, API prosi o klienta, spotkanie lub zakres czasu i nie wywołuje modelu.
+9. API stosuje ustalony zakres i filtr autoryzacji przed pobraniem jakiegokolwiek rekordu transkrypcji, decyzji, zadania lub uczestnika.
+10. Warstwa pobierania danych łączy semantyczne podobieństwo wektorowe z podobieństwem leksykalnym i scala rankingi.
+11. Warstwa pobierania danych nadaje priorytet decyzjom i zadaniom, a następnie dodaje sąsiednie fragmenty transkrypcji jako materiał wspierający.
+12. Materiał dowodowy od nieprzypisanych mówców jest wykluczany, gdy pytanie wymaga tożsamości osoby, a odpowiedź odnotowuje, że część rozmowy może być niekompletna.
+13. Jeśli wynik punktowy materiału dowodowego jest niższy od skonfigurowanego progu, API zwraca informację, że dostępne spotkania nie zawierają odpowiedzi dostatecznie popartej dowodami.
+14. Budowniczy promptu wysyła wyłącznie wybrany materiał dowodowy, lokalne identyfikatory mówców, role i pytanie, bez legendy mapującej mówców na osoby.
+15. Model zwraca odpowiedź zwalidowaną przez Zod oraz odwołania do dostarczonych rekordów materiału dowodowego.
+16. API odrzuca niepoprawny wynik, w odpowiednich przypadkach ponawia próbę raz i po drugim niepowodzeniu zwraca błąd bez publikowania niezwalidowanej odpowiedzi.
+17. API przecina zwrócone odwołania z autoryzowanym zbiorem materiału dowodowego i odrzuca odwołania, które nie zostały dostarczone modelowi.
+18. API pobiera z PostgreSQL dokładny tekst źródłowy, znaczniki czasu, metadane spotkania i mapowania mówców.
+19. Serializer odpowiedzi rozwiązuje identyfikatory mówców na nazwy wyłącznie dla uprawnionego wywołującego.
+20. Endpoint zwraca odpowiedź, cytaty ze źródeł, identyfikatory spotkań, znaczniki czasu oraz wszelkie komunikaty o ograniczeniach lub potrzebie doprecyzowania.
 
-4. Source quotes are loaded verbatim from PostgreSQL after generation rather
+## 6. Obsługiwane typy pytań
 
-   than being trusted from model-generated text.
+### Pojedynczy fakt lub ustalenie
 
-5. Speaker names and emails remain in internal mapping tables and are resolved
+- **Dotyczy:** Jednego ustalenia, decyzji, zadania lub odpowiedzi w określonym spotkaniu, w odniesieniu do określonej osoby lub klienta albo w określonym zakresie czasu.
+- **Obsługiwane przez planowany przepływ:** Tak; najpierw pobierane są decyzje i zadania, następnie używane są fragmenty transkrypcji jako materiał dowodowy i zwracane jest źródło.
+- **Dodatkowa praca:** Brak poza wspólnym przepływem.
 
-   only in the response shown to an authorized caller.
+### Temat bez zakresu
 
-6. Unmapped speakers are not guessed from the participant list.
-7. Mathematical operations, counts, and comparisons are performed by application
+- **Dotyczy:** Pytania takiego jak „Jaki budżet uzgodniliśmy?” bez osoby, spotkania, tytułu ani zakresu czasu.
+- **Obsługiwane przez planowany przepływ:** Tak; przepływ zatrzymuje się przed pobraniem danych i prosi o więcej szczegółów.
+- **Dodatkowa praca:** Brak poza walidacją zakresu zapytania.
 
-   code, not invented by the model.
+### Względny lub jawny czas
 
-8. A low-confidence or ambiguous result produces a clarification or
+- **Dotyczy:** „Na ostatnim spotkaniu”, „wczoraj”, „w tym miesiącu” lub nazwanego zakresu dat.
+- **Obsługiwane przez planowany przepływ:** Tak; zakres jest rozwiązywany przed pobraniem danych i stosowany do uprawnionych spotkań.
+- **Dodatkowa praca:** Przechowywanie wiarygodnych czasów rozpoczęcia spotkań oraz zdefiniowanie, że „ostatnie spotkanie” oznacza najnowsze spotkanie, w którym wywołujący uczestniczył i które może odczytać, chyba że decyzja produktowa zmieni tę definicję.
 
-   insufficiency response instead of a guessed answer.
+### Osoba, firma lub kampania z literówką
 
-## 4. Indexing flow
+- **Dotyczy:** Niepoprawnie wpisanej lub odmienionej nazwy osoby, nazwy firmy, kodu kampanii albo tytułu.
+- **Obsługiwane przez planowany przepływ:** Tak; `pg_trgm` jest łączone z pobieraniem semantycznym, a przy niejednoznacznych dopasowaniach użytkownik proszony jest o wybór.
+- **Dodatkowa praca:** Utrzymywanie aliasów i niewielkiego słownika dziedzinowego, jeśli ewaluacja pokaże, że embeddingi i dopasowanie trójgramowe pomijają powtarzające się terminy branżowe.
 
-1. After transcript segments are stored, a worker groups neighboring segments
+### Wypowiedź konkretnej osoby
 
-   into searchable chunks with a meeting id, time range, segment ids, speaker
-   ids, and text without person names or email addresses.
+- **Dotyczy:** „Co Bartek powiedział o budżecie?”
+- **Obsługiwane przez planowany przepływ:** Tak, gdy mówca został ręcznie przypisany do tej osoby; pobierane są wyłącznie segmenty powiązane z tym mapowaniem.
+- **Dodatkowa praca:** Nie wnioskować o mówcy na podstawie listy uczestników i informować, gdy wykluczono nieprzypisane wypowiedzi.
 
-2. After the structured summary passes validation, the worker stores decisions
+### Ostatnie spotkanie bez wskazania osoby
 
-   and tasks with their speaker ids, roles, and source segment ids.
+- **Dotyczy:** „Jaki budżet uzgodniliśmy na ostatnim spotkaniu?”
+- **Obsługiwane przez planowany przepływ:** Tak; używane jest najnowsze uprawnione spotkanie z odpowiedniego zbioru spotkań wywołującego i wyszukiwanie odbywa się wyłącznie w nim.
+- **Dodatkowa praca:** Uwidocznić regułę zakresu w odpowiedzi, zwracając datę i tytuł wybranego spotkania.
 
-3. The worker generates embeddings for chunks, decisions, and tasks using the
+### Porównanie dwóch spotkań
 
-   same embedding model used for queries.
+- **Dotyczy:** „O jaki procent klient X zmniejszył budżet kampanii?”
+- **Obsługiwane przez planowany przepływ:** Nie w pełni w podstawowym przepływie pojedynczego wyniku, ponieważ pytanie wymaga dwóch zgodnych wartości z różnych spotkań.
+- **Dodatkowa praca:** Dodać plan porównania, który pobiera wiele spotkań, wyodrębnia kwotę, walutę, okres, kampanię i datę, łączy porównywalne wartości, oblicza procent w kodzie aplikacji i cytuje oba spotkania.
 
-4. PostgreSQL stores the embeddings and creates lexical indexes for searchable
+### Szereg czasowy
 
-   text.
+- **Dotyczy:** Sposobu, w jaki budżet lub decyzja zmieniały się na przestrzeni kilku spotkań.
+- **Obsługiwane przez planowany przepływ:** Nie w pełni w podstawowym przepływie pojedynczego wyniku, ponieważ musi zachować wiele wartości uporządkowanych chronologicznie.
+- **Dodatkowa praca:** Dodać plan szeregu, który zwraca uporządkowane wyodrębnione wartości z jednym źródłem lub większą ich liczbą dla każdej wartości.
 
-5. A speaker mapping change does not change the raw transcript chunks, but it
+### Wiele jawnie wskazanych spotkań
 
-   can trigger regeneration and re-indexing of affected structured decisions.
+- **Dotyczy:** Pytania porównującego lub podsumowującego co najmniej dwa konkretne spotkania albo daty.
+- **Obsługiwane przez planowany przepływ:** Częściowo; jeden resolver zakresu jest niewystarczający dla wielu niezależnych zakresów.
+- **Dodatkowa praca:** Umożliwić listę zakresów i pobierać materiał dowodowy osobno dla każdego z nich przed połączeniem odpowiedzi.
 
-6. Every searchable record retains its meeting id so that the authorization
+### Wiele tematów w jednym pytaniu
 
-   predicate can be applied to every retrieval query.
+- **Dotyczy:** „Co ustaliliśmy w sprawie budżetu i kto odpowiada za kreację?”
+- **Obsługiwane przez planowany przepływ:** Częściowo; jeden ranking może nadać nadmierny priorytet jednemu tematowi.
+- **Dodatkowa praca:** Podzielić pytanie na podzapytania, pobrać dane niezależnie dla każdego z nich i połączyć zwalidowane wyniki.
 
-The transcript is searchable, but decisions and tasks receive higher ranking
-priority because they contain more signal for questions about agreements and
-responsibilities.
+### Lista wszystkich decyzji lub zadań
 
-## 5. Common query flow
+- **Dotyczy:** Każdego zadania lub ustalenia w określonym spotkaniu albo zakresie czasu.
+- **Obsługiwane przez planowany przepływ:** Nie przez przepływ odpowiedzi top-k, ponieważ ranking podobieństwa nie jest kompletnym zbiorem wyników.
+- **Dodatkowa praca:** Dodać plan listy z filtrowaniem SQL, paginacją, stabilnym porządkiem i jawną gwarancją kompletności.
 
-1. The NestJS endpoint receives the authenticated user id, question, and
+### Zliczanie lub agregacja
 
-   optional context such as the meeting currently open in the UI.
+- **Dotyczy:** „Ile spotkań wspominało o budżecie?” lub „Ile zadań jest przeterminowanych?”
+- **Obsługiwane przez planowany przepływ:** Nie przez pobieranie top-k, ponieważ odpowiedź wymaga kompletnego przefiltrowanego zbioru.
+- **Dodatkowa praca:** Dodać plan agregacji za pomocą SQL albo zwalidowanego ustrukturyzowanego wyodrębniania, a następnie agregację po stronie kodu.
 
-2. The authorization layer builds the set of meetings the user may read.
-3. A query planner classifies the question as a supported meeting question,
+### Metadane spotkania
 
-   clarification request, comparison, list, count, metadata request, or
-   unsupported request.
+- **Dotyczy:** Uczestników, daty spotkania, tytułu, organizatora lub informacji, czy dana osoba uczestniczyła.
+- **Obsługiwane przez planowany przepływ:** Nie przez samo pobieranie transkrypcji.
+- **Dodatkowa praca:** Dodać plan metadanych oparty bezpośrednio na autoryzowanych tabelach relacyjnych.
 
-4. The planner extracts possible entities, time ranges, meeting references,
+### Sprzeczne ustalenia
 
-   topics, requested output shape, and comparison or counting requirements.
+- **Dotyczy:** Różne spotkania zawierają niezgodne wartości budżetu lub decyzje.
+- **Obsługiwane przez planowany przepływ:** Nie w sposób niezawodny, jeśli zachowywany jest tylko najwyżej sklasyfikowany wynik.
+- **Dodatkowa praca:** Pobrać wszystkie istotne ustrukturyzowane decyzje w zakresie, wykryć niezgodne wartości i przedstawić oba źródła zamiast po cichu wybierać jedno.
 
-5. The API resolves names and companies against authorized people and meetings
+### Pytanie uzupełniające
 
-   using lexical matching that tolerates misspellings.
+- **Dotyczy:** „A ile wynosiło to wcześniej?” po poprzedniej odpowiedzi.
+- **Obsługiwane przez planowany przepływ:** Nie bez stanu konwersacji.
+- **Dodatkowa praca:** Utrwalać lub przekazywać do następnego żądania poprzedni zwalidowany plan zapytania, encję, temat i zakres źródeł.
 
-6. If a name has multiple plausible matches, the API asks the user to choose
+### Dokładny cytat lub weryfikacja
 
-   rather than guessing.
+- **Dotyczy:** Sprawdzenia, czy wypowiedziano konkretne sformułowanie i gdzie to nastąpiło.
+- **Obsługiwane przez planowany przepływ:** Tak dla pobranego materiału dowodowego, z dokładnym tekstem wczytanym z transkrypcji.
+- **Dodatkowa praca:** Oznaczyć, czy źródłem jest surowy segment transkrypcji, czy wygenerowana ustrukturyzowana decyzja.
 
-7. The API resolves explicit time ranges, relative ranges such as “last
+### Pytanie spoza domeny spotkań
 
-   meeting”, the meeting open in the UI, titles, campaign names, or multiple
-   explicitly named meetings.
+- **Dotyczy:** Pytania niezwiązanego ze spotkaniami, transkrypcjami, ustaleniami lub zadaniami.
+- **Obsługiwane przez planowany przepływ:** Nie bez jawnego klasyfikatora domeny.
+- **Dodatkowa praca:** Dodać wczesną odpowiedź dla nieobsługiwanej intencji i nie wykonywać pobierania danych.
 
-8. If the question contains only a topic and no usable scope, the API asks for a
+### Porada lub rekomendacja
 
-   client, meeting, or time range and does not call a model.
+- **Dotyczy:** Tego, co firma powinna zrobić, a nie tego, co zostało uzgodnione.
+- **Obsługiwane przez planowany przepływ:** Nie jako odpowiedź na fakt dotyczący spotkania; nieograniczone doradztwo wykraczałoby poza kontrakt materiału dowodowego.
+- **Dodatkowa praca:** Albo odrzucić żądanie, albo zdefiniować osobny, wyraźnie oznaczony tryb porad z innymi zasadami produktowymi i bezpieczeństwa.
 
-9. The API applies the resolved scope and authorization filter before retrieving
+### Status realizacji zadania
 
-   any transcript, decision, task, or participant record.
+- **Dotyczy:** Informacji, czy uzgodnione zadanie zostało faktycznie wykonane.
+- **Obsługiwane przez planowany przepływ:** Nie, jeśli system przechowuje wyłącznie informację o przypisaniu zadania.
+- **Dodatkowa praca:** Dodać źródło statusu zadania lub integrację; w przeciwnym razie informować, że system zna ustalenie, ale nie stan jego realizacji.
 
-10. The retrieval layer combines semantic vector similarity with lexical
+## 7. Przypadki brzegowe i wymagane zachowanie
 
-    similarity and merges the rankings.
+- **Brak dostępnych pasujących spotkań:** zwrócić brak wyniku bez ujawniania, czy istnieje niedostępne spotkanie.
+- **Niejednoznaczna osoba lub firma:** poprosić użytkownika o wybranie kandydata i nie wywoływać modelu.
+- **Brak użytecznego zakresu:** poprosić o osobę, klienta, spotkanie, tytuł, kampanię lub zakres czasu i nie wywoływać modelu.
+- **Brak dostatecznie podobnego materiału dowodowego:** stwierdzić, że dostępny zakres nie zawiera odpowiedzi popartej dowodami, zamiast zgadywać.
+- **Istnieje tylko jedna strona porównania:** podać znalezioną wartość i poprosić o drugi okres lub spotkanie.
+- **Różne waluty, okresy lub kampanie:** nie obliczać porównania, dopóki użytkownik nie doprecyzuje danych lub rekordy nie staną się porównywalne.
+- **Zerowa wartość bazowa w obliczeniu procentowym:** zwrócić wartości bez procentu i wyjaśnić, że procent jest niezdefiniowany.
+- **Nieprzypisany mówca:** nie przypisywać automatycznie osoby i wyraźnie zaznaczyć, że materiał dowodowy może być niekompletny.
+- **Sprzeczne wartości:** zacytować sprzeczne spotkania i zapytać, która interpretacja lub jaki okres jest właściwy.
+- **Model zwraca źródło, którego nie otrzymał:** odrzucić odwołanie i potraktować odpowiedź jako nieprawidłową.
+- **Wynik modelu dwukrotnie nie przechodzi walidacji Zod:** zwrócić błąd bez zapisywania ani wyświetlania niezwalidowanej odpowiedzi.
+- **Imię i nazwisko osoby występuje jako zwykłe słowo tematyczne:** nie rozwiązywać go do mówcy bez silnego dopasowania encji i dowodów kontekstowych.
+- **Liczby i kody:** zachować pobieranie leksykalne obok embeddingów, ponieważ dokładne liczby, identyfikatory kampanii i skróty nie są wiarygodnie reprezentowane wyłącznie przez podobieństwo semantyczne.
+- **Usunięte lub wygasłe źródło:** zwrócić wynik ustrukturyzowany tylko wtedy, gdy zezwala na to polityka przechowywania źródeł; w przeciwnym razie poinformować, że źródło nie jest już dostępne.
 
-11. The retrieval layer prioritizes decisions and tasks, then adds neighboring
+## 8. Rozważane alternatywy
 
-    transcript chunks as supporting evidence.
+### Wyszukiwanie wyłącznie w ustrukturyzowanych podsumowaniach
 
-12. Evidence from unmapped speakers is excluded when the question requires a
+Jest tańsze i prostsze, ale pomija dokładne cytaty, zastrzeżenia i szczegóły, które podsumowanie pominęło, więc jest niewystarczające jako ostateczny projekt.
 
-    person identity, and the response records that part of the conversation may
-    be incomplete.
+### Wyszukiwanie wyłącznie w surowych transkrypcjach
 
-13. If the evidence score is below a configured threshold, the API returns that
+Zachowuje pełność i źródła, ale generuje więcej szumu i ułatwia wybranie luźnej wypowiedzi zamiast potwierdzonego ustalenia.
 
-    the available meetings do not contain a sufficiently supported answer.
+### Wysyłanie całej historii do LLM
 
-14. The prompt builder sends only selected evidence, local speaker ids, roles,
+Pozwala uniknąć indeksu wyszukiwania w małym prototypie, ale słabo skaluje się, kosztuje więcej, ułatwia pominięcie szczegółów i nie pozwala bezpiecznie egzekwować kontroli dostępu wewnątrz promptu.
 
-    and the question, without a speaker-to-person legend.
+### Użycie Elasticsearch, Typesense lub osobnego hostowanego silnika wyszukiwania
 
-15. The model returns a Zod-validated answer and references to the supplied
+Są to możliwe rozwiązania, jeśli wyszukiwanie stanie się duże lub będzie wymagać zaawansowanego autouzupełniania, ale dodają drugi magazyn danych, synchronizację, koszt operacyjny i kolejną granicę autoryzacji bez wyraźnej korzyści przy oczekiwanej początkowej skali.
 
-    evidence records.
+## 9. Plan weryfikacji dla późniejszej wersji
 
-16. The API rejects malformed output, retries once when appropriate, and returns
+Przed implementacją funkcji należy przygotować niepoufny zestaw ewaluacyjny z pytaniami i oczekiwanymi rekordami źródłowymi, obejmujący:
 
-    an error without publishing an unvalidated answer after a second failure.
+- polską fleksję, literówki i angielskie terminy marketingowe;
+- dokładne kwoty, waluty, wartości procentowe, identyfikatory kampanii i daty;
+- pytania dotyczące jednego spotkania, wielu spotkań, list, zliczeń, porównań i pytań uzupełniających;
+- niejednoznaczne nazwy, brak zakresu, sprzeczne decyzje i nieprzypisanych mówców;
+- użytkowników z różnymi uprawnieniami do spotkań;
+- próby pobrania niedostępnych spotkań lub sfabrykowania źródeł.
 
-17. The API intersects returned references with the authorized evidence set and
-
-    rejects references that were not supplied to the model.
-
-18. The API fetches exact source text, timestamps, meeting metadata, and
-
-    speaker mappings from PostgreSQL.
-
-19. The response serializer resolves speaker ids to names only for the
-
-    authorized caller.
-
-20. The endpoint returns the answer, source quotes, meeting identifiers,
-
-    timestamps, and any limitation or clarification message.
-
-## 6. Supported question types
-
-### Single fact or agreement
-
-- **Concerns:** One agreement, decision, task, or answer within a defined
-  meeting, person, client, or time scope.
-- **Supported by the planned flow:** Yes; retrieve decisions and tasks first,
-  use transcript chunks as evidence, and return a source.
-- **Additional work:** None beyond the common flow.
-
-### Topic without scope
-
-- **Concerns:** A question such as “What budget did we agree on?” without a
-  person, meeting, title, or time range.
-- **Supported by the planned flow:** Yes; stop before retrieval and ask for
-  more detail.
-- **Additional work:** None beyond query-scope validation.
-
-### Relative or explicit time
-
-- **Concerns:** “At the last meeting”, “yesterday”, “this month”, or a named
-  date range.
-- **Supported by the planned flow:** Yes; resolve the range before retrieval
-  and apply it to authorized meetings.
-- **Additional work:** Store reliable meeting start times and define that
-  “last meeting” means the latest meeting the caller attended and may read,
-  unless a product decision changes this.
-
-### Person, company, or campaign with a misspelling
-
-- **Concerns:** An incorrectly typed or inflected name, company name, campaign
-  code, or title.
-- **Supported by the planned flow:** Yes; combine `pg_trgm` with semantic
-  retrieval and ask for a choice when matches are ambiguous.
-- **Additional work:** Maintain aliases and a small domain vocabulary if
-  evaluation shows that embeddings and trigram matching miss recurring jargon.
-
-### Statement by a specific person
-
-- **Concerns:** “What did Bartek say about the budget?”
-- **Supported by the planned flow:** Yes, when the speaker was manually mapped
-  to that person; retrieve only segments associated with that mapping.
-- **Additional work:** Do not infer a speaker from the participant list and
-  report when unmapped speech was excluded.
-
-### Last meeting without a named person
-
-- **Concerns:** “What budget did we agree on at the last meeting?”
-- **Supported by the planned flow:** Yes; use the latest authorized meeting in
-  the caller's relevant meeting set and search only there.
-- **Additional work:** Make the scope rule visible in the response by returning
-  the selected meeting date and title.
-
-### Comparison between two meetings
-
-- **Concerns:** “By what percentage did client X reduce the campaign budget?”
-- **Supported by the planned flow:** Not completely in the basic single-result
-  flow, because the question requires two compatible values from different
-  meetings.
-- **Additional work:** Add a comparison plan that retrieves multiple meetings,
-  extracts amount, currency, period, campaign, and date, pairs comparable
-  values, calculates the percentage in application code, and cites both
-  meetings.
-
-### Time series
-
-- **Concerns:** How a budget or decision changed across several meetings.
-- **Supported by the planned flow:** Not completely in the basic single-result
-  flow, because it must preserve multiple chronological values.
-- **Additional work:** Add a series plan that returns ordered extracted values
-  with one or more sources per value.
-
-### Multiple explicitly named meetings
-
-- **Concerns:** A question comparing or summarizing two or more specific
-  meetings or dates.
-- **Supported by the planned flow:** Partly; one scope resolver is insufficient
-  for multiple independent ranges.
-- **Additional work:** Allow a list of scopes and retrieve evidence separately
-  for each before combining the answer.
-
-### Multiple topics in one question
-
-- **Concerns:** “What did we decide about the budget and who owns the creative?”
-- **Supported by the planned flow:** Partly; one ranking may over-prioritize one
-  topic.
-- **Additional work:** Split the question into subqueries, retrieve each
-  independently, and combine the validated results.
-
-### List of all decisions or tasks
-
-- **Concerns:** Every task or agreement in a defined meeting or time range.
-- **Supported by the planned flow:** Not by a top-k answer flow, because a
-  similarity ranking is not a complete result set.
-- **Additional work:** Add a list plan with SQL filtering, pagination, stable
-  ordering, and an explicit completeness guarantee.
-
-### Count or aggregation
-
-- **Concerns:** “How many meetings mentioned the budget?” or “How many tasks
-  are overdue?”
-- **Supported by the planned flow:** Not by top-k retrieval, because the
-  answer requires the complete filtered set.
-- **Additional work:** Add an aggregation plan using SQL or a validated
-  structured extraction followed by code-side aggregation.
-
-### Meeting metadata
-
-- **Concerns:** Participants, meeting date, title, organizer, or whether a
-  person attended.
-- **Supported by the planned flow:** Not by transcript retrieval alone.
-- **Additional work:** Add a metadata plan backed directly by authorized
-  relational tables.
-
-### Contradictory agreements
-
-- **Concerns:** Different meetings contain incompatible budget values or
-  decisions.
-- **Supported by the planned flow:** Not reliably if only the highest-ranked
-  result is retained.
-- **Additional work:** retrieve all relevant structured decisions in the scope,
-  detect incompatible values, and present both sources instead of silently
-  choosing one.
-
-### Follow-up question
-
-- **Concerns:** “And how much was it before?” after a previous answer.
-- **Supported by the planned flow:** Not without conversation state.
-- **Additional work:** Persist or pass the previous validated query plan,
-  entity, topic, and source scope into the next request.
-
-### Exact quote or verification
-
-- **Concerns:** Whether a particular phrase was said and where.
-- **Supported by the planned flow:** Yes for retrieved evidence, with the exact
-  text loaded from the transcript.
-- **Additional work:** Mark whether a source is a raw transcript segment or a
-  generated structured decision.
-
-### Question outside the meeting domain
-
-- **Concerns:** A question unrelated to meetings, transcripts, agreements, or
-  tasks.
-- **Supported by the planned flow:** Not without an explicit domain classifier.
-- **Additional work:** Add an early unsupported-intent response and do not
-  perform retrieval.
-
-### Advice or recommendation
-
-- **Concerns:** What the company should do rather than what was agreed.
-- **Supported by the planned flow:** Not as a meeting-fact answer; unrestricted
-  advice would exceed the evidence contract.
-- **Additional work:** Either reject the request or define a separate,
-  explicitly labeled advice mode with different product and safety rules.
-
-### Task execution status
-
-- **Concerns:** Whether an agreed task was actually completed.
-- **Supported by the planned flow:** Not if the system only stores that the task
-  was assigned.
-- **Additional work:** Add a task-status source or integration; otherwise say
-  that the system knows the agreement, not its completion state.
-
-## 7. Edge cases and required behavior
-
-- **No accessible meeting matches:** return no result without revealing whether
-  an inaccessible meeting exists.
-- **Ambiguous person or company:** ask the user to select a candidate and do
-  not call the model.
-- **No usable scope:** ask for a person, client, meeting, title, campaign, or
-  time range and do not call the model.
-- **No sufficiently similar evidence:** state that the available scope does not
-  contain a supported answer instead of guessing.
-- **Only one side of a comparison exists:** report the found value and ask for a
-  second period or meeting.
-- **Different currencies, periods, or campaigns:** do not calculate a
-  comparison until the user clarifies or the records become comparable.
-- **Zero baseline in a percentage calculation:** return the values without a
-  percentage and explain that the percentage is undefined.
-- **Unmapped speaker:** do not assign a person automatically and explicitly
-  state that the evidence may be incomplete.
-- **Conflicting values:** cite the conflicting meetings and ask which
-  interpretation or period is intended.
-- **Model returns a source it did not receive:** discard the reference and
-  treat the answer as invalid.
-- **Model output fails Zod validation twice:** return an error without storing
-  or displaying an unvalidated answer.
-- **Person name appears as an ordinary topic word:** do not resolve it to a
-  speaker without a strong entity match and contextual evidence.
-- **Numbers and codes:** preserve lexical retrieval alongside embeddings because
-  exact numbers, campaign ids, and abbreviations are not reliably represented
-  by semantic similarity alone.
-- **Deleted or expired source:** return the structured result only if the
-  source retention policy permits it; otherwise report that the source is no
-  longer available.
-
-## 8. Alternatives considered
-
-### Search only structured summaries
-
-This is cheaper and cleaner, but it misses exact quotes, qualifications, and
-details that the summary omitted, so it is insufficient as the final design.
-
-### Search only raw transcripts
-
-This preserves recall and sources, but produces more noise and makes it easier
-to select a casual statement instead of a confirmed agreement.
-
-### Send the complete history to an LLM
-
-This avoids a retrieval index for a small prototype, but it scales poorly,
-costs more, makes details easier to miss, and cannot safely enforce access
-control inside the prompt.
-
-### Use Elasticsearch, Typesense, or a separate hosted search engine
-
-These are viable if search becomes large or requires advanced autocomplete, but
-they add a second data store, synchronization, operational cost, and another
-authorization boundary without a clear benefit at the expected initial scale.
-
-## 9. Verification plan for a later version
-
-Before implementing the feature, prepare a non-confidential evaluation set with
-questions and expected source records covering:
-
-- Polish inflection, misspellings, and English marketing terms;
-- exact amounts, currencies, percentages, campaign ids, and dates;
-- single-meeting, multi-meeting, list, count, comparison, and follow-up
-  questions;
-- ambiguous names, missing scope, conflicting decisions, and unmapped speakers;
-- users with different meeting permissions;
-- attempts to retrieve inaccessible meetings or fabricate sources.
-
-Measure retrieval recall, source precision, answer faithfulness, clarification
-rate, unauthorized-result rate, latency, and cost per question. The
-unauthorized-result rate must be zero before enabling the feature for real
-client data.
+Należy mierzyć pełność odzyskiwania, precyzję źródeł, wierność odpowiedzi, odsetek próśb o doprecyzowanie, odsetek nieautoryzowanych wyników, opóźnienie i koszt pytania. Odsetek nieautoryzowanych wyników musi wynosić zero przed włączeniem funkcji dla rzeczywistych danych klientów.
