@@ -1,5 +1,6 @@
 import { ArgumentsHost } from '@nestjs/common';
 import { ApplicationError } from '../errors/application-error.js';
+import { InvalidSummaryResultError } from '../errors/invalid-summary-result.error.js';
 import { ApplicationExceptionFilter } from './application-exception.filter.js';
 
 function createHost() {
@@ -24,6 +25,15 @@ describe('ApplicationExceptionFilter', () => {
 
     expect(status).toHaveBeenCalledWith(400);
     expect(json).toHaveBeenCalledWith({ error: 'invalid_request' });
+  });
+
+  it('maps an invalid summary result to internal_error', () => {
+    const { host, status, json } = createHost();
+
+    filter.catch(new InvalidSummaryResultError(), host);
+
+    expect(status).toHaveBeenCalledWith(500);
+    expect(json).toHaveBeenCalledWith({ error: 'internal_error' });
   });
 
   it('hides an unexpected failure behind internal_error', () => {

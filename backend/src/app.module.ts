@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
 import { MeetingsModule } from './meetings/meetings.module.js';
 import { QueueModule } from './queue/queue.module.js';
+import { SummariesModule } from './summaries/summaries.module.js';
 import { TranscriptsModule } from './transcripts/transcripts.module.js';
 
 @Module({
@@ -16,6 +17,7 @@ import { TranscriptsModule } from './transcripts/transcripts.module.js';
     HealthModule,
     MeetingsModule,
     TranscriptsModule,
+    SummariesModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

@@ -42,7 +42,7 @@ The service uses one `not_found` for a missing meeting, a caller who is not a pa
 | 202 | | Processing was accepted. The body is empty. |
 | 400 | `invalid_request` | A path id is not a uuid. |
 | 401 | `unauthenticated` | `X-User-Id` is missing or is not a uuid. |
-| 404 | `not_found` | The meeting does not exist, the caller is not a participant (including an unknown user id and an organizer who did not attend), or the caller is a participant and this resource has no row. |
+| 404 | `not_found` | The meeting does not exist, the caller is not a participant (including an unknown user id and an organizer who did not attend), or the caller is a participant and this resource is not stored yet (no transcript segments, or no published summary for the summary and tasks reads). |
 | 500 | `internal_error` | An unexpected failure. |
 
 On a meeting read the service checks the path uuid first, then the header, then participation and the resource. A malformed path id is `invalid_request` even when the header is also missing.
@@ -131,6 +131,6 @@ Returns the published tasks for a participant.
 - 200: `TasksResponse`. `tasks` may be empty.
 - 400, 401, 404, 500: `MeetingReadError`, as in Conventions.
 
-404 covers a missing meeting and a non-participant. A meeting with no task rows returns an empty list.
+404 covers a missing meeting, a non-participant, and a participant whose meeting has no published summary. Tasks are published together with the summary, so this read stays 404 until the summary exists and after a failed validation. Once the summary is published, a meeting with no task rows returns an empty list.
 
-**Service logic.** The service checks participation, then loads `tasks` for the meeting in `position` order. Each row becomes a `Task`: the local `speakerId` with `displayName: null`, the action, and the deadline as `YYYY-MM-DD`. A task may have no summary.
+**Service logic.** The service checks participation, then checks that the meeting has a published summary, then loads `tasks` for the meeting in `position` order. Each row becomes a `Task`: the local `speakerId` with `displayName: null`, the action, and the deadline as `YYYY-MM-DD`. A task may have no summary.
