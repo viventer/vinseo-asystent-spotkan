@@ -5,6 +5,7 @@ import { ConfigModule } from './config/config.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
 import { MeetingsModule } from './meetings/meetings.module.js';
+import { ProcessingModule } from './processing/processing.module.js';
 import { QueueModule } from './queue/queue.module.js';
 import { SummariesModule } from './summaries/summaries.module.js';
 import { TranscriptsModule } from './transcripts/transcripts.module.js';
@@ -18,6 +19,7 @@ import { TranscriptsModule } from './transcripts/transcripts.module.js';
     MeetingsModule,
     TranscriptsModule,
     SummariesModule,
+    ProcessingModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
