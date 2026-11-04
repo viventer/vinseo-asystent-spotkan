@@ -16,7 +16,9 @@
   - outbound-data protection,
   - tests and local execution.
 - Use a transcription and summary stub only for the assignment code.
-- Do not add a simulated recording source or recording fixtures at this stage.
+- Include a recording-source adapter whose version-zero implementation returns
+  one stable recording-ready marker, but do not create a simulated recording
+  file or audio fixture.
 
 ## Stage 1: API prototype
 
@@ -27,7 +29,8 @@
 - Store validated summaries, decisions, and tasks.
 - Add retries, idempotency, provider error handling, and processing status.
 - Add deletion and retention handling for uploaded recordings and derived data.
-- Add tests using approved non-confidential recordings.
+- Add tests using approved non-confidential recordings and purpose-recorded
+  fictional meetings.
 - Verify the core pipeline and output quality.
 - Do not add participant-to-speaker mapping yet.
 - Do not add Google Meet or Google Drive integration yet.

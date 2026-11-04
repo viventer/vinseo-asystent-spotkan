@@ -74,6 +74,12 @@
 
 # API
 
+## HealthResponse
+
+| Field | Type | Required | Constraints |
+| --- | --- | --- | --- |
+| status | string | yes | `ok` |
+
 ## MeetingReadRequest
 
 | Field | Type | Required | Constraints |
@@ -86,7 +92,7 @@
 | Field | Type | Required | Constraints |
 | --- | --- | --- | --- |
 | speakerId | string | yes | |
-| displayName | string | yes | null in version zero |
+| displayName | string \| null | yes | always present; null in version zero |
 
 ## TranscriptSegment
 
@@ -135,4 +141,4 @@
 
 | Field | Type | Required | Constraints |
 | --- | --- | --- | --- |
-| error | string | yes | forbidden when the caller is not a participant or the meeting does not exist; not_found when the caller is a participant and this resource has no row |
+| error | string | yes | `not_found`, `unauthenticated`, `invalid_request`, or `internal_error`. `not_found` when the meeting does not exist, the caller is not a participant, or the resource has no row. `unauthenticated` when `X-User-Id` is missing or not a uuid. `invalid_request` when a path id is not a uuid. `internal_error` for an unexpected failure |
